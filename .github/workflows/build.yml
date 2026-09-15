@@ -21,13 +21,11 @@ jobs:
 
       - name: Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;35.0.1 ndk;29.0.13113456'
 
       - name: Instalar SDK
-        run: |
-          sdkmanager "platforms;android-36" \
-                     "build-tools;35.0.1" \
-                     "platform-tools" \
-                     "ndk;29.0.13113456"
+        run: echo "Android SDK preparado"
 
       - name: Permisos Gradle
         run: chmod +x gradlew
