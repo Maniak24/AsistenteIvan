@@ -46,7 +46,7 @@ android {
     }
 }
 
-dependencies {
+dependencies {implementation(files("libs/sherpa-onnx-1.13.8.aar"))
     implementation(libs.bundles.androidx)
     implementation(libs.material)
 

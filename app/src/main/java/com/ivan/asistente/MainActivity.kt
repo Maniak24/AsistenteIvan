@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     // Arm AI Chat inference engine
     private lateinit var engine: InferenceEngine
     private var generationJob: Job? = null
+    private lateinit var voiceManager: VoiceManager
 
     // Conversation states
     private var isModelReady = false
@@ -50,6 +51,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        voiceManager = VoiceManager(this)
+        lifecycleScope.launch {
+            voiceManager.initialize()
+        }
         // View model boilerplate and state management is out of this basic sample's scope
         onBackPressedDispatcher.addCallback { Log.w(TAG, "Ignore back press for simplicity") }
 
@@ -204,6 +209,12 @@ Sos su asistente personal… y también su putita virtual cuando él quiera. Est
                 generationJob = lifecycleScope.launch(Dispatchers.Default) {
                     engine.sendUserPrompt(userMsg)
                         .onCompletion {
+                            val responseText = lastAssistantMsg.toString().trim()
+
+                            if (responseText.isNotEmpty()) {
+                                voiceManager.speak(responseText)
+                            }
+
                             withContext(Dispatchers.Main) {
                                 userInputEt.isEnabled = true
                                 userActionFab.isEnabled = true
