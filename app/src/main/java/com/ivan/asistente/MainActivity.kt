@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        }
+
         // View model boilerplate and state management is out of this basic sample's scope
         onBackPressedDispatcher.addCallback { Log.w(TAG, "Ignore back press for simplicity") }
 
