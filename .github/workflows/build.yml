@@ -27,6 +27,11 @@ jobs:
       - name: Instalar SDK
         run: echo "Android SDK preparado"
 
+      - name: CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 3.31.6
+
       - name: Permisos Gradle
         run: chmod +x gradlew
 
