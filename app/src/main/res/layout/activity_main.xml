@@ -177,7 +177,7 @@
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingTop="48dp"
+        android:paddingTop="64dp"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:background="@drawable/bg_side_menu"
@@ -236,6 +236,15 @@
             android:layout_height="52dp"
             android:gravity="center_vertical"
             android:text="▣  Archivos"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/menu_catalog"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:gravity="center_vertical"
+            android:text="🛍️  Catálogo"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 

@@ -1,7 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Base.Theme.AsistenteIvan" parent="Theme.Material3.DayNight.NoActionBar">
+
+    <style name="Base.Theme.AsistenteIvan" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+
+        <item name="android:windowBackground">#111116</item>
+        <item name="android:colorAccent">#9A7BFF</item>
+        <item name="colorPrimary">#9A7BFF</item>
+        <item name="colorSecondary">#9A7BFF</item>
+
+        <item name="android:navigationBarColor">#111116</item>
+        <item name="android:statusBarColor">#111116</item>
+
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+
+        <item name="android:alertDialogTheme">@style/MiPcDialogTheme</item>
     </style>
 
     <style name="Theme.AsistenteIvan" parent="Base.Theme.AsistenteIvan" />
+
+    <style name="MiPcDialogTheme" parent="Theme.Material3.Dark.Dialog.Alert">
+        <item name="android:windowBackground">#19191F</item>
+        <item name="android:colorAccent">#9A7BFF</item>
+        <item name="colorPrimary">#9A7BFF</item>
+        <item name="colorSecondary">#9A7BFF</item>
+    </style>
+
 </resources>
