@@ -2,6 +2,12 @@ package com.ivan.asistente
 
 import android.net.Uri
 import android.os.Bundle
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import android.view.WindowManager
 import android.util.Log
 import android.widget.EditText
 import android.widget.TextView
@@ -49,8 +55,42 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        val btnMenu = findViewById<View>(R.id.btn_menu)
+        val sideMenu = findViewById<View>(R.id.side_menu)
+
+        findViewById<View>(R.id.btn_close_menu).setOnClickListener {
+            sideMenu.visibility = View.GONE
+        }
+
+        btnMenu.setOnClickListener {
+            sideMenu.visibility =
+                if (sideMenu.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
+
+
+        val connectionStatus = findViewById<TextView>(R.id.connection_status)
+
+        fun updateConnectionStatus() {
+            val cm = getSystemService(ConnectivityManager::class.java)
+            val network = cm.activeNetwork
+            val capabilities = cm.getNetworkCapabilities(network)
+            val online = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+
+            connectionStatus.text = if (online) {
+                "●  En línea  •  Asistente inteligente"
+            } else {
+                "●  Sin conexión  •  Asistente inteligente"
+            }
+        }
+
+        updateConnectionStatus()
+
+
+
 
         // View model boilerplate and state management is out of this basic sample's scope
         onBackPressedDispatcher.addCallback { Log.w(TAG, "Ignore back press for simplicity") }
@@ -61,6 +101,23 @@ class MainActivity : AppCompatActivity() {
         messagesRv.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = false }
         messagesRv.adapter = messageAdapter
         userInputEt = findViewById(R.id.user_input)
+
+        val btnMic = findViewById<View>(R.id.btn_mic)
+        val btnCall = findViewById<View>(R.id.btn_call)
+        val fab = findViewById<View>(R.id.fab)
+
+        userInputEt.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val writing = !s.isNullOrBlank()
+                btnMic.visibility = if (writing) View.GONE else View.VISIBLE
+                btnCall.visibility = if (writing) View.GONE else View.VISIBLE
+                fab.visibility = View.VISIBLE
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
         userActionFab = findViewById(R.id.fab)
 
         // Arm AI Chat initialization
@@ -75,7 +132,7 @@ class MainActivity : AppCompatActivity() {
 
             if (savedModel.exists()) {
                 runOnUiThread {
-                    userInputEt.hint = "Cargando VIREY..."
+                    userInputEt.hint = "Cargando Mi PC..."
                 }
 
                 loadModel(
@@ -178,7 +235,7 @@ class MainActivity : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 isModelReady = true
-                userInputEt.hint = "Escribile a VIREY..."
+                userInputEt.hint = "Escribile a Mi PC..."
             }
 
             engine.setSystemPrompt("""
