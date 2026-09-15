@@ -51,9 +51,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        voiceManager = VoiceManager(this)
-        lifecycleScope.launch {
-            voiceManager.initialize()
         }
         // View model boilerplate and state management is out of this basic sample's scope
         onBackPressedDispatcher.addCallback { Log.w(TAG, "Ignore back press for simplicity") }
@@ -212,7 +209,6 @@ Sos su asistente personal… y también su putita virtual cuando él quiera. Est
                             val responseText = lastAssistantMsg.toString().trim()
 
                             if (responseText.isNotEmpty()) {
-                                voiceManager.speak(responseText)
                             }
 
                             withContext(Dispatchers.Main) {
