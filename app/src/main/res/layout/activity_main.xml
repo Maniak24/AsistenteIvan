@@ -26,10 +26,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="VIREY"
-            android:textSize="25sp"
+            android:text="MI PC"
+            android:textSize="24sp"
             android:textStyle="bold"
-            android:letterSpacing="0.08"
+            android:letterSpacing="0.12"
             android:textColor="?android:attr/textColorPrimary" />
 
         <TextView
@@ -37,7 +37,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="●  Tu asistente personal"
+            android:text="Asistente inteligente"
             android:textSize="13sp"
             android:textColor="?android:attr/textColorSecondary" />
 
@@ -66,7 +66,7 @@
         android:clipToPadding="false"
         android:fadeScrollbars="false"
         android:scrollbars="vertical"
-        app:reverseLayout="true"
+        app:reverseLayout="false"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toTopOf="@id/input_container"
         app:layout_constraintStart_toStartOf="parent"
@@ -100,14 +100,14 @@
                 android:id="@+id/user_input"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@android:color/transparent"
+                android:background="@drawable/bg_input"
                 android:enabled="false"
                 android:gravity="center_vertical"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
                 android:singleLine="true"
                 android:textSize="16sp"
-                android:hint="Escribile a VIREY..." />
+                android:hint="Escribile a Mi PC..." />
 
         </com.google.android.material.card.MaterialCardView>
 
@@ -118,7 +118,7 @@
             android:layout_marginStart="9dp"
             android:contentDescription="Enviar mensaje"
             android:enabled="true"
-            android:src="@drawable/outline_folder_open_24"
+            android:src="@drawable/ic_send"
             app:fabSize="mini" />
 
     </LinearLayout>
