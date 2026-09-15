@@ -1,6 +1,13 @@
 package com.ivan.asistente
 
 import android.net.Uri
+import android.app.AlertDialog
+import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.os.Bundle
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -36,6 +43,11 @@ import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var isListening = false
+    private var conversationVoiceMode = false
+
+
     // Android views
     private lateinit var ggufTv: TextView
     private lateinit var messagesRv: RecyclerView
@@ -53,11 +65,211 @@ class MainActivity : AppCompatActivity() {
     private val lastAssistantMsg = StringBuilder()
     private val messageAdapter = MessageAdapter(messages)
 
+    private fun startConversationMode() {
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Toast.makeText(this, "El reconocimiento de voz no está disponible.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
+            return
+        }
+
+        conversationVoiceMode = true
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (!::voiceManager.isInitialized) {
+                    voiceManager = VoiceManager(applicationContext)
+                }
+
+                voiceManager.initialize()
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Modo conversación activado",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    startConversationListening()
+                }
+            } catch (e: Throwable) {
+                conversationVoiceMode = false
+                Log.e(TAG, "No se pudo iniciar la voz", e)
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "No se pudo iniciar la voz de Mi PC.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    private fun startConversationListening() {
+        if (!conversationVoiceMode) return
+
+        if (speechRecognizer == null) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+
+            speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(params: android.os.Bundle?) {
+                    isListening = true
+                }
+
+                override fun onResults(results: android.os.Bundle?) {
+                    isListening = false
+
+                    val texts = results?.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION
+                    )
+
+                    val spokenText = texts?.firstOrNull()?.trim()
+
+                    if (!spokenText.isNullOrEmpty() && conversationVoiceMode) {
+                        userInputEt.setText(spokenText)
+                        userInputEt.setSelection(userInputEt.text.length)
+
+                        handleUserInput()
+                    }
+                }
+
+                override fun onError(error: Int) {
+                    isListening = false
+
+                    if (conversationVoiceMode) {
+                        lifecycleScope.launch {
+                            kotlinx.coroutines.delay(500)
+                            startConversationListening()
+                        }
+                    }
+                }
+
+                override fun onBeginningOfSpeech() {}
+                override fun onRmsChanged(rmsdB: Float) {}
+                override fun onBufferReceived(buffer: ByteArray?) {}
+                override fun onEndOfSpeech() {}
+                override fun onPartialResults(partialResults: android.os.Bundle?) {}
+                override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
+            })
+        }
+
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-AR")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "es-AR")
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+        }
+
+        speechRecognizer?.startListening(intent)
+    }
+
+    private fun stopConversationMode() {
+        conversationVoiceMode = false
+        isListening = false
+        speechRecognizer?.cancel()
+
+        Toast.makeText(
+            this,
+            "Modo conversación finalizado",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun startVoiceInput() {
+        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+            Toast.makeText(this, "El reconocimiento de voz no está disponible.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
+            return
+        }
+
+        if (speechRecognizer == null) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+
+            speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(params: android.os.Bundle?) {
+                    isListening = true
+                    Toast.makeText(this@MainActivity, "Escuchando...", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onResults(results: android.os.Bundle?) {
+                    val texts = results?.getStringArrayList(
+                        SpeechRecognizer.RESULTS_RECOGNITION
+                    )
+
+                    if (!texts.isNullOrEmpty()) {
+                        userInputEt.setText(texts[0])
+                        userInputEt.setSelection(userInputEt.text.length)
+                    }
+
+                    isListening = false
+                }
+
+                override fun onError(error: Int) {
+                    isListening = false
+                    Toast.makeText(
+                        this@MainActivity,
+                        "No pude reconocer la voz.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+                override fun onBeginningOfSpeech() {}
+                override fun onRmsChanged(rmsdB: Float) {}
+                override fun onBufferReceived(buffer: ByteArray?) {}
+                override fun onEndOfSpeech() {}
+                override fun onPartialResults(partialResults: android.os.Bundle?) {}
+                override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
+            })
+        }
+
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-AR")
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "es-AR")
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+        }
+
+        speechRecognizer?.startListening(intent)
+    }
+
+    override fun onDestroy() {
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+        super.onDestroy()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
-        enableEdgeToEdge()
+        
         setContentView(R.layout.activity_main)
+
+        findViewById<View>(R.id.btn_mic).setOnClickListener {
+            startVoiceInput()
+        }
+
+        findViewById<View>(R.id.btn_call).setOnClickListener {
+            if (conversationVoiceMode) {
+                stopConversationMode()
+            } else {
+                startConversationMode()
+            }
+        }
 
         val btnMenu = findViewById<View>(R.id.btn_menu)
         val sideMenu = findViewById<View>(R.id.side_menu)
@@ -71,6 +283,141 @@ class MainActivity : AppCompatActivity() {
                 if (sideMenu.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
+
+        findViewById<View>(R.id.menu_new_chat).setOnClickListener {
+            messages.clear()
+            messageAdapter.notifyDataSetChanged()
+            sideMenu.visibility = View.GONE
+            userInputEt.text.clear()
+        }
+
+        findViewById<View>(R.id.menu_files).setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+            }
+            startActivityForResult(intent, 1001)
+            sideMenu.visibility = View.GONE
+        }
+
+        findViewById<View>(R.id.menu_history).setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Historial")
+                .setMessage("Todavía no hay conversaciones guardadas.")
+                .setPositiveButton("Cerrar", null)
+                .show()
+            sideMenu.visibility = View.GONE
+        }
+
+        findViewById<View>(R.id.menu_settings).setOnClickListener {
+            val opciones = arrayOf(
+                "🤖 Modelo de IA",
+                "🔊 Voz de Mi PC",
+                "🎙️ Reconocimiento de voz",
+                "💬 Comportamiento",
+                "🌙 Apariencia",
+                "🏪 Información del local",
+                "🧹 Borrar conversaciones",
+                "ℹ️ Acerca de Mi PC"
+            )
+
+            AlertDialog.Builder(this)
+                .setTitle("Configuración")
+                .setItems(opciones) { _, which ->
+                    when (which) {
+                        0 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Modelo de IA")
+                                .setMessage(
+                                    if (isModelReady)
+                                        "Gemma está cargado y funcionando de forma local."
+                                    else
+                                        "No hay un modelo de IA cargado."
+                                )
+                                .setPositiveButton("OK", null)
+                                .show()
+                        }
+
+                        1 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Voz de Mi PC")
+                                .setMessage("Voz de Mi PC mediante síntesis de voz local.")
+                                .setPositiveButton("OK", null)
+                                .show()
+                        }
+
+                        2 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Reconocimiento de voz")
+                                .setMessage("Idioma configurado: Español (Argentina)")
+                                .setPositiveButton("OK", null)
+                                .show()
+                        }
+
+                        3 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Comportamiento")
+                                .setItems(
+                                    arrayOf(
+                                        "Respuestas breves",
+                                        "Respuestas normales",
+                                        "Respuestas detalladas"
+                                    ),
+                                    null
+                                )
+                                .show()
+                        }
+
+                        4 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Apariencia")
+                                .setItems(
+                                    arrayOf(
+                                        "Oscuro",
+                                        "Claro",
+                                        "Usar configuración del dispositivo"
+                                    ),
+                                    null
+                                )
+                                .show()
+                        }
+
+                        5 -> {
+                            mostrarInformacionLocal()
+                        }
+
+                        6 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Borrar conversaciones")
+                                .setMessage("¿Querés eliminar todos los mensajes de esta conversación?")
+                                .setNegativeButton("Cancelar", null)
+                                .setPositiveButton("Borrar") { _, _ ->
+                                    messages.clear()
+                                    messageAdapter.notifyDataSetChanged()
+                                }
+                                .show()
+                        }
+
+                        7 -> {
+                            AlertDialog.Builder(this)
+                                .setTitle("Mi PC")
+                                .setMessage(
+                                    "Asistente inteligente\n\n" +
+                                    "IA local con Gemma\n" +
+                                    "Voz local\n\n" +
+                                    "Fundador y CEO: Yvan Reinaldo Veron\n" +
+                                    "Colonia Victoria, Misiones, Argentina\n\n" +
+                                    "Mi PC — El futuro es hoy."
+                                )
+                                .setPositiveButton("OK", null)
+                                .show()
+                        }
+                    }
+                }
+                .show()
+
+            sideMenu.visibility = View.GONE
+        }
 
         val connectionStatus = findViewById<TextView>(R.id.connection_status)
 
@@ -266,6 +613,62 @@ class MainActivity : AppCompatActivity() {
     /**
      * Validate and send the user message into [InferenceEngine]
      */
+    private fun mostrarInformacionLocal() {
+        val prefs = getSharedPreferences("mi_pc_local", MODE_PRIVATE)
+
+        if (!prefs.contains("nombre")) {
+            prefs.edit()
+                .putString("nombre", "MI PC")
+                .putString("direccion", "Av. San Martín 1997, Eldorado, Misiones")
+                .putString("telefono", "3751 318686")
+                .putString(
+                    "horarios",
+                    "Lunes a viernes: 07:30 a 12:30 y 16:00 a 20:00\n" +
+                    "Sábado: 08:00 a 12:30 y 17:00 a 20:00"
+                )
+                .putString("redes", "")
+                .apply()
+        }
+
+        val datos = arrayOf(
+            "Nombre del local",
+            "Dirección",
+            "Teléfono / WhatsApp",
+            "Horarios",
+            "Instagram / Facebook"
+        )
+
+        val claves = arrayOf(
+            "nombre",
+            "direccion",
+            "telefono",
+            "horarios",
+            "redes"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("Información del local")
+            .setItems(datos) { _, which ->
+                val input = EditText(this)
+                input.setText(prefs.getString(claves[which], "") ?: "")
+                input.setSelection(input.text.length)
+                input.hint = datos[which]
+
+                AlertDialog.Builder(this)
+                    .setTitle(datos[which])
+                    .setView(input)
+                    .setNegativeButton("Cancelar", null)
+                    .setPositiveButton("Guardar") { _, _ ->
+                        prefs.edit()
+                            .putString(claves[which], input.text.toString().trim())
+                            .apply()
+                    }
+                    .show()
+            }
+            .setNegativeButton("Cerrar", null)
+            .show()
+    }
+
     private fun handleUserInput() {
         userInputEt.text.toString().also { userMsg ->
             if (userMsg.isEmpty()) {
@@ -285,7 +688,18 @@ class MainActivity : AppCompatActivity() {
                         .onCompletion {
                             val responseText = lastAssistantMsg.toString().trim()
 
-                            if (responseText.isNotEmpty()) {
+                            if (responseText.isNotEmpty() && conversationVoiceMode) {
+                                try {
+                                    voiceManager.speak(responseText)
+
+                                    withContext(Dispatchers.Main) {
+                                        if (conversationVoiceMode) {
+                                            startConversationListening()
+                                        }
+                                    }
+                                } catch (e: Throwable) {
+                                    Log.e(TAG, "Error al reproducir la respuesta de voz", e)
+                                }
                             }
 
                             withContext(Dispatchers.Main) {
@@ -349,6 +763,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        conversationVoiceMode = false
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+
+        if (::voiceManager.isInitialized) {
+            voiceManager.release()
+        }
+
         engine.destroy()
         super.onDestroy()
     }
