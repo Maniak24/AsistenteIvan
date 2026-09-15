@@ -69,7 +69,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun startConversationMode() {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Toast.makeText(this, "El reconocimiento de voz no está disponible.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "El reconocimiento de voz no está disponible.",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -80,36 +84,30 @@ class MainActivity : AppCompatActivity() {
 
         conversationVoiceMode = true
 
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                if (!::voiceManager.isInitialized) {
-                    voiceManager = VoiceManager(applicationContext)
-                }
-
-                voiceManager.initialize()
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Modo conversación activado",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    startConversationListening()
-                }
-            } catch (e: Throwable) {
-                conversationVoiceMode = false
-                Log.e(TAG, "No se pudo iniciar la voz", e)
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "No se pudo iniciar la voz de Mi PC.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+        try {
+            if (!::voiceManager.isInitialized) {
+                voiceManager = VoiceManager(applicationContext)
             }
+        } catch (e: Throwable) {
+            conversationVoiceMode = false
+            Log.e(TAG, "No se pudo preparar la voz", e)
+
+            Toast.makeText(
+                this,
+                "No se pudo iniciar la voz de Mi PC.",
+                Toast.LENGTH_LONG
+            ).show()
+
+            return
         }
+
+        Toast.makeText(
+            this,
+            "Modo conversación activado",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        startConversationListening()
     }
 
     private fun startConversationListening() {
