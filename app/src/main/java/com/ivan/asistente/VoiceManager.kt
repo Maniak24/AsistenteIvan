@@ -36,7 +36,7 @@ class VoiceManager(private val context: Context) {
             )
         )
 
-        tts = OfflineTts(config)
+        tts = OfflineTts(context.assets, config)
     }
 
     suspend fun speak(text: String) = withContext(Dispatchers.IO) {
