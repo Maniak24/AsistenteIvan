@@ -66,6 +66,23 @@ class MainActivity : AppCompatActivity() {
         // Arm AI Chat initialization
         lifecycleScope.launch(Dispatchers.Default) {
             engine = AiChat.getInferenceEngine(applicationContext)
+
+            // Buscar automáticamente el Gemma ya instalado
+            val savedModel = File(
+                filesDir,
+                "models/gemma-3-1b-it-Q4_K_M.gguf"
+            )
+
+            if (savedModel.exists()) {
+                runOnUiThread {
+                    userInputEt.hint = "Cargando VIREY..."
+                }
+
+                loadModel(
+                    "gemma-3-1b-it-Q4_K_M.gguf",
+                    savedModel
+                )
+            }
         }
 
         // Upon CTA button tapped
@@ -158,6 +175,11 @@ class MainActivity : AppCompatActivity() {
                 userInputEt.hint = "Loading model..."
             }
             engine.loadModel(modelFile.path)
+
+            withContext(Dispatchers.Main) {
+                isModelReady = true
+                userInputEt.hint = "Escribile a VIREY..."
+            }
 
             engine.setSystemPrompt("""
                 Sos la IA personal de Yvan.
