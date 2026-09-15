@@ -41,7 +41,7 @@ jobs:
           validate-wrappers: false
 
       - name: Compilar
-        run: ./gradlew assembleDebug --stacktrace --info
+        run: ./gradlew assembleDebug --stacktrace 2\>build.log || (grep -E "e: |error:|Unresolved reference|Compilation error" build.log || cat build.log; exit 1)
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4
