@@ -24,9 +24,6 @@ jobs:
         with:
           packages: 'platform-tools platforms;android-36 build-tools;35.0.1 ndk;29.0.13113456'
 
-      - name: Instalar SDK
-        run: echo "Android SDK preparado"
-
       - name: CMake
         uses: lukka/get-cmake@latest
         with:
@@ -35,13 +32,13 @@ jobs:
       - name: Permisos Gradle
         run: chmod +x gradlew
 
-      - name: Build APK
+      - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
 
       - name: Compilar
-        run: ./gradlew assembleDebug --stacktrace 2\>build.log || (grep -E "e: |error:|Unresolved reference|Compilation error" build.log || cat build.log; exit 1)
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Guardar APK
         uses: actions/upload-artifact@v4
