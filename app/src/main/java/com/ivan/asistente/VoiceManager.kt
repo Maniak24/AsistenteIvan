@@ -4,7 +4,6 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import com.k2fsa.sherpa.onnx.GenerationConfig
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.OfflineTtsConfig
 import com.k2fsa.sherpa.onnx.OfflineTtsModelConfig
@@ -17,19 +16,27 @@ import kotlin.math.roundToInt
 class VoiceManager(private val context: Context) {
 
     private var tts: OfflineTts? = null
-    private val modelDir = File(context.filesDir, "voz/vits-piper-es_AR-daniela-high")
+    private val modelDir = File(context.filesDir, "voz")
 
     suspend fun initialize() = withContext(Dispatchers.IO) {
         if (tts != null) return@withContext
 
         copyAssets("voz", File(context.filesDir, "voz"))
 
+        val modelFile = File(modelDir, "es_AR-daniela-high.onnx")
+        val tokensFile = File(modelDir, "tokens.txt")
+        val dataDir = File(modelDir, "espeak-ng-data")
+
+        check(modelFile.exists()) { "No se encontró el modelo de Daniela." }
+        check(tokensFile.exists()) { "No se encontró tokens.txt de Daniela." }
+        check(dataDir.exists()) { "No se encontró espeak-ng-data de Daniela." }
+
         val config = OfflineTtsConfig(
             model = OfflineTtsModelConfig(
                 vits = OfflineTtsVitsModelConfig(
-                    model = File(modelDir, "es_AR-daniela-high.onnx").absolutePath,
-                    tokens = File(modelDir, "tokens.txt").absolutePath,
-                    dataDir = File(modelDir, "espeak-ng-data").absolutePath
+                    model = modelFile.absolutePath,
+                    tokens = tokensFile.absolutePath,
+                    dataDir = dataDir.absolutePath
                 ),
                 numThreads = 1,
                 debug = false

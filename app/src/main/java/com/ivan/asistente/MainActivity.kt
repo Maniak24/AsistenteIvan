@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private var speechRecognizer: SpeechRecognizer? = null
     private var isListening = false
     private var conversationVoiceMode = false
+    private var conversationProcessing = false
 
 
     // Android views
@@ -112,6 +113,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startConversationListening() {
         if (!conversationVoiceMode) return
+        if (isListening || conversationProcessing) return
 
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -131,6 +133,7 @@ class MainActivity : AppCompatActivity() {
                     val spokenText = texts?.firstOrNull()?.trim()
 
                     if (!spokenText.isNullOrEmpty() && conversationVoiceMode) {
+                        conversationProcessing = true
                         userInputEt.setText(spokenText)
                         userInputEt.setSelection(userInputEt.text.length)
 
@@ -174,6 +177,7 @@ class MainActivity : AppCompatActivity() {
     private fun stopConversationMode() {
         conversationVoiceMode = false
         isListening = false
+        conversationProcessing = false
         speechRecognizer?.cancel()
 
         Toast.makeText(
@@ -685,18 +689,18 @@ class MainActivity : AppCompatActivity() {
                             if (responseText.isNotEmpty() && conversationVoiceMode) {
                                 try {
                                     voiceManager.speak(responseText)
-
-                                    withContext(Dispatchers.Main) {
-                                        if (conversationVoiceMode) {
-                                            startConversationListening()
-                                        }
-                                    }
                                 } catch (e: Throwable) {
                                     Log.e(TAG, "Error al reproducir la respuesta de voz", e)
                                 }
                             }
 
                             withContext(Dispatchers.Main) {
+                                conversationProcessing = false
+
+                                if (conversationVoiceMode) {
+                                    startConversationListening()
+                                }
+
                                 userInputEt.isEnabled = true
                                 userActionFab.isEnabled = true
                             }
@@ -758,6 +762,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         conversationVoiceMode = false
+        conversationProcessing = false
         speechRecognizer?.destroy()
         speechRecognizer = null
 
