@@ -36,8 +36,10 @@ class IntroRobotView @JvmOverloads constructor(
         }
 
         post {
-            val recycler = rootView.findViewById<RecyclerView>(R.id.messages) ?: return@post
             val panel = parent as? View ?: return@post
+            panel.bringToFront()
+
+            val recycler = rootView.findViewById<RecyclerView>(R.id.messages) ?: return@post
 
             fun syncVisibility() {
                 panel.visibility = if ((recycler.adapter?.itemCount ?: 0) == 0) View.VISIBLE else View.GONE
