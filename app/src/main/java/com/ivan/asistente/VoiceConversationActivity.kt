@@ -1,10 +1,13 @@
 package com.ivan.asistente
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.View
-import android.view.animation.DecelerateInterpolator
+import android.view.WindowManager
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -28,11 +31,11 @@ class VoiceConversationActivity : AppCompatActivity() {
     private lateinit var orb: View
     private lateinit var glow: View
     private lateinit var state: TextView
-
     private var animation: AnimatorSet? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_voice_conversation)
 
         instance = this
@@ -46,116 +49,100 @@ class VoiceConversationActivity : AppCompatActivity() {
             finish()
         }
 
-        startListeningAnimation()
+        setListening()
     }
 
-    fun setListening() {
+    private fun setListening() {
         state.text = "Escuchando…"
         startListeningAnimation()
     }
 
-    fun setProcessing() {
-        state.text = "Analizando…"
+    private fun setProcessing() {
+        state.text = "Procesando…"
         startProcessingAnimation()
     }
 
-    fun setSpeaking() {
+    private fun setSpeaking() {
         state.text = "Daniela hablando…"
         startSpeakingAnimation()
     }
 
-    private fun startListeningAnimation() {
+    private fun cancelAnimation() {
+        animation?.removeAllListeners()
         animation?.cancel()
+        animation = null
+        orb.animate().cancel()
+        glow.animate().cancel()
+    }
 
-        val scaleX = ObjectAnimator.ofFloat(orb, View.SCALE_X, 1f, 1.06f, 1f)
-        val scaleY = ObjectAnimator.ofFloat(orb, View.SCALE_Y, 1f, 1.06f, 1f)
+    private fun startListeningAnimation() {
+        cancelAnimation()
+        orb.scaleX = 1f
+        orb.scaleY = 1f
+        glow.scaleX = 1f
+        glow.scaleY = 1f
+        glow.alpha = 0.72f
+
+        val orbX = ObjectAnimator.ofFloat(orb, View.SCALE_X, 1f, 1.035f, 1f)
+        val orbY = ObjectAnimator.ofFloat(orb, View.SCALE_Y, 1f, 1.035f, 1f)
+        val glowX = ObjectAnimator.ofFloat(glow, View.SCALE_X, 1f, 1.035f, 1f)
+        val glowY = ObjectAnimator.ofFloat(glow, View.SCALE_Y, 1f, 1.035f, 1f)
 
         animation = AnimatorSet().apply {
-            playTogether(scaleX, scaleY)
-            duration = 1300
-            interpolator = DecelerateInterpolator()
+            playTogether(orbX, orbY, glowX, glowY)
+            duration = 1700
+            interpolator = AccelerateDecelerateInterpolator()
+            addListener(loopListener("listening"))
             start()
         }
     }
 
     private fun startProcessingAnimation() {
-        animation?.cancel()
-
-        val rotate = ObjectAnimator.ofFloat(orb, View.ROTATION, 0f, 360f)
-
-        val scaleX = ObjectAnimator.ofFloat(
-            orb,
-            View.SCALE_X,
-            1f, 1.05f, 1f
-        )
-
-        val scaleY = ObjectAnimator.ofFloat(
-            orb,
-            View.SCALE_Y,
-            1f, 1.05f, 1f
-        )
+        cancelAnimation()
+        val orbX = ObjectAnimator.ofFloat(orb, View.SCALE_X, 1f, 1.045f, 1f)
+        val orbY = ObjectAnimator.ofFloat(orb, View.SCALE_Y, 1f, 1.045f, 1f)
+        val glowAlpha = ObjectAnimator.ofFloat(glow, View.ALPHA, 0.52f, 0.9f, 0.52f)
 
         animation = AnimatorSet().apply {
-            playTogether(rotate, scaleX, scaleY)
-            duration = 1600
+            playTogether(orbX, orbY, glowAlpha)
+            duration = 1150
+            interpolator = AccelerateDecelerateInterpolator()
+            addListener(loopListener("processing"))
             start()
         }
-
-        animation?.addListener(object : android.animation.AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: android.animation.Animator) {
-                if (state.text == "Analizando…") {
-                    startProcessingAnimation()
-                }
-            }
-        })
     }
 
     private fun startSpeakingAnimation() {
-        animation?.cancel()
-
-        val orbX = ObjectAnimator.ofFloat(
-            orb,
-            View.SCALE_X,
-            1f, 1.12f, 0.96f, 1.08f, 1f
-        )
-
-        val orbY = ObjectAnimator.ofFloat(
-            orb,
-            View.SCALE_Y,
-            1f, 1.12f, 0.96f, 1.08f, 1f
-        )
-
-        val glowX = ObjectAnimator.ofFloat(
-            glow,
-            View.SCALE_X,
-            1f, 1.08f, 0.98f, 1.06f, 1f
-        )
-
-        val glowY = ObjectAnimator.ofFloat(
-            glow,
-            View.SCALE_Y,
-            1f, 1.08f, 0.98f, 1.06f, 1f
-        )
-
-        val glowAlpha = ObjectAnimator.ofFloat(
-            glow,
-            View.ALPHA,
-            0.65f, 1f, 0.75f, 1f
-        )
+        cancelAnimation()
+        val orbX = ObjectAnimator.ofFloat(orb, View.SCALE_X, 1f, 1.075f, 0.985f, 1.055f, 1f)
+        val orbY = ObjectAnimator.ofFloat(orb, View.SCALE_Y, 1f, 1.075f, 0.985f, 1.055f, 1f)
+        val glowX = ObjectAnimator.ofFloat(glow, View.SCALE_X, 1f, 1.10f, 0.98f, 1.07f, 1f)
+        val glowY = ObjectAnimator.ofFloat(glow, View.SCALE_Y, 1f, 1.10f, 0.98f, 1.07f, 1f)
+        val glowAlpha = ObjectAnimator.ofFloat(glow, View.ALPHA, 0.62f, 1f, 0.68f, 0.95f, 0.62f)
 
         animation = AnimatorSet().apply {
             playTogether(orbX, orbY, glowX, glowY, glowAlpha)
-            duration = 850
+            duration = 900
+            interpolator = AccelerateDecelerateInterpolator()
+            addListener(loopListener("speaking"))
             start()
         }
+    }
 
-        animation?.addListener(object : android.animation.AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: android.animation.Animator) {
-                if (state.text == "Daniela hablando…") {
-                    startSpeakingAnimation()
+    private fun loopListener(expected: String) = object : AnimatorListenerAdapter() {
+        override fun onAnimationEnd(animator: Animator) {
+            if (state.text == when (expected) {
+                    "listening" -> "Escuchando…"
+                    "processing" -> "Procesando…"
+                    else -> "Daniela hablando…"
+                }) {
+                when (expected) {
+                    "listening" -> startListeningAnimation()
+                    "processing" -> startProcessingAnimation()
+                    "speaking" -> startSpeakingAnimation()
                 }
             }
-        })
+        }
     }
 
     @Deprecated("Deprecated in Android API")
@@ -165,12 +152,8 @@ class VoiceConversationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        animation?.cancel()
-
-        if (instance === this) {
-            instance = null
-        }
-
+        cancelAnimation()
+        if (instance === this) instance = null
         super.onDestroy()
     }
 }
