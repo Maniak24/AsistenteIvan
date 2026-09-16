@@ -40,7 +40,7 @@ class IntroRobotView @JvmOverloads constructor(
             val panel = parent as? View ?: return@post
 
             fun syncVisibility() {
-                panel.visibility = if (recycler.adapter?.itemCount ?: 0 == 0) View.VISIBLE else View.GONE
+                panel.visibility = if ((recycler.adapter?.itemCount ?: 0) == 0) View.VISIBLE else View.GONE
             }
 
             observer = object : RecyclerView.AdapterDataObserver() {
