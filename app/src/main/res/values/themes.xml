@@ -3,18 +3,14 @@
 
     <style name="Base.Theme.AsistenteIvan" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:fontFamily">sans</item>
-
         <item name="android:windowBackground">#111116</item>
         <item name="android:colorAccent">#9A7BFF</item>
         <item name="colorPrimary">#9A7BFF</item>
         <item name="colorSecondary">#9A7BFF</item>
-
         <item name="android:navigationBarColor">#111116</item>
         <item name="android:statusBarColor">#111116</item>
-
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
-
         <item name="android:alertDialogTheme">@style/MiPcDialogTheme</item>
     </style>
 
@@ -25,6 +21,19 @@
         <item name="android:colorAccent">#9A7BFF</item>
         <item name="colorPrimary">#9A7BFF</item>
         <item name="colorSecondary">#9A7BFF</item>
+    </style>
+
+    <style name="MenuItem">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:drawablePadding">14dp</item>
+        <item name="android:paddingStart">2dp</item>
+        <item name="android:paddingEnd">2dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
     </style>
 
 </resources>
