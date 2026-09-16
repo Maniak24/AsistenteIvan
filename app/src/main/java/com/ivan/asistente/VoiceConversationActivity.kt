@@ -39,7 +39,6 @@ class VoiceConversationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_voice_conversation)
 
         instance = this
-
         orb = findViewById(R.id.voice_orb)
         glow = findViewById(R.id.voice_orb_glow)
         state = findViewById(R.id.voice_state)
@@ -87,8 +86,8 @@ class VoiceConversationActivity : AppCompatActivity() {
 
     private fun startStateAnimation(scale: Float, alpha: Float, duration: Long) {
         animation?.cancel()
-
         glow.alpha = alpha
+
         val animator = ValueAnimator.ofFloat(0f, 1f).apply {
             this.duration = duration
             repeatCount = ValueAnimator.INFINITE
@@ -115,13 +114,15 @@ class VoiceConversationActivity : AppCompatActivity() {
             interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener {
                 val phase = it.animatedFraction
-                val pulse = 1f + 0.075f * kotlin.math.sin(phase * Math.PI * 2.0).toFloat()
-                val glowPulse = 1f + 0.10f * kotlin.math.sin(phase * Math.PI * 2.0).toFloat()
+                val wave = kotlin.math.sin(phase * Math.PI * 2.0)
+                val pulse = 1f + 0.075f * wave.toFloat()
+                val glowPulse = 1f + 0.10f * wave.toFloat()
                 orb.scaleX = pulse
                 orb.scaleY = pulse
                 glow.scaleX = glowPulse
                 glow.scaleY = glowPulse
-                glow.alpha = 0.72f + 0.24f * ((kotlin.math.sin(phase * Math.PI * 2.0) + 1.0) / 2.0f).toFloat()
+                val alphaWave = ((wave + 1.0) / 2.0).toFloat()
+                glow.alpha = 0.72f + 0.24f * alphaWave
             }
         }
         animation = animator
