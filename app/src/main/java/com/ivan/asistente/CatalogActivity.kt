@@ -3,36 +3,27 @@ package com.ivan.asistente
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
-import android.widget.*
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.Locale
-import java.util.zip.ZipInputStream
-import javax.xml.parsers.DocumentBuilderFactory
 
 private data class CatalogProduct(
     val id: Long,
     var name: String,
     var category: String,
     var brand: String,
-    var model: String,
     var price: String,
     var stock: Int,
     var description: String,
-    var promotion: String,
-    var imageUri: String = ""
+    var promotion: String
 )
 
 class CatalogActivity : AppCompatActivity() {
@@ -40,38 +31,30 @@ class CatalogActivity : AppCompatActivity() {
     private lateinit var search: EditText
     private lateinit var countText: TextView
     private lateinit var stockText: TextView
-    private lateinit var categoryContainer: LinearLayout
     private val products = mutableListOf<CatalogProduct>()
-    private var selectedCategory = "Todas"
-    private var sortMode = 0
-    private var pendingImageInput: EditText? = null
-    private val prefs by lazy { getSharedPreferences("mi_pc_catalog", Context.MODE_PRIVATE) }
 
-    private val importFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@registerForActivityResult
-        try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
-        if (queryFileName(uri).lowercase(Locale.getDefault()).endsWith(".xlsx")) importXlsx(uri) else importTextFile(uri)
-    }
+    private val prefs by lazy { getSharedPreferences("mi_pc_catalog", Context.MODE_PRIVATE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_catalog)
+
         container = findViewById(R.id.products_container)
         search = findViewById(R.id.catalog_search)
         countText = findViewById(R.id.catalog_count)
         stockText = findViewById(R.id.catalog_stock)
-        categoryContainer = findViewById(R.id.category_container)
+
         loadProducts()
-        rebuildCategories()
         refreshProducts()
+
         findViewById<View>(R.id.btn_add_product).setOnClickListener { showProductEditor(null) }
-        findViewById<View>(R.id.btn_import_catalog).setOnClickListener { showImportOptions() }
-        findViewById<View>(R.id.btn_sort_catalog).setOnClickListener { showSortOptions() }
-        search.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { refreshProducts() }
-            override fun afterTextChanged(s: Editable?) = Unit
-        })
+        findViewById<View>(R.id.btn_import_catalog)?.setOnClickListener { showImportOptions() }
+        findViewById<View>(R.id.btn_sort_catalog)?.setOnClickListener { showSortOptions() }
+
+        search.setOnKeyListener { _, _, _ ->
+            refreshProducts()
+            false
+        }
     }
 
     private fun loadProducts() {
@@ -83,8 +66,8 @@ class CatalogActivity : AppCompatActivity() {
                 products.add(CatalogProduct(
                     o.optLong("id", System.currentTimeMillis() + i),
                     o.optString("name"), o.optString("category"), o.optString("brand"),
-                    o.optString("model"), o.optString("price"), o.optInt("stock"),
-                    o.optString("description"), o.optString("promotion"), o.optString("imageUri")
+                    o.optString("price"), o.optInt("stock"), o.optString("description"),
+                    o.optString("promotion")
                 ))
             }
         } catch (_: Exception) {
@@ -96,277 +79,208 @@ class CatalogActivity : AppCompatActivity() {
         val array = JSONArray()
         products.forEach { p ->
             array.put(JSONObject().apply {
-                put("id", p.id); put("name", p.name); put("category", p.category); put("brand", p.brand)
-                put("model", p.model); put("price", p.price); put("stock", p.stock)
-                put("description", p.description); put("promotion", p.promotion); put("imageUri", p.imageUri)
+                put("id", p.id); put("name", p.name); put("category", p.category)
+                put("brand", p.brand); put("price", p.price); put("stock", p.stock)
+                put("description", p.description); put("promotion", p.promotion)
             })
         }
         prefs.edit().putString("products", array.toString()).apply()
     }
 
-    private fun rebuildCategories() {
-        categoryContainer.removeAllViews()
-        val categories = listOf("Todas") + products.map { it.category.trim() }.filter { it.isNotEmpty() }.distinct().sorted()
-        categories.forEach { category ->
-            val chip = TextView(this).apply {
-                text = category; textSize = 13f; gravity = Gravity.CENTER
-                setTypeface(null, android.graphics.Typeface.BOLD); setPadding(18, 0, 18, 0)
-                setTextColor(if (category == selectedCategory) Color.WHITE else Color.rgb(170, 170, 182))
-                background = getDrawable(if (category == selectedCategory) R.drawable.bg_catalog_add else R.drawable.bg_product_card)
-                setOnClickListener { selectedCategory = category; rebuildCategories(); refreshProducts() }
-            }
-            categoryContainer.addView(chip, LinearLayout.LayoutParams(-2, 36).apply { setMargins(0, 0, 8, 0) })
-        }
-    }
-
     private fun refreshProducts() {
         container.removeAllViews()
-        val query = search.text.toString().trim().lowercase(Locale.getDefault())
-        var filtered = products.filter {
-            (selectedCategory == "Todas" || it.category.equals(selectedCategory, true)) &&
-                (query.isEmpty() || listOf(it.name, it.category, it.brand, it.model, it.description, it.promotion)
-                    .any { value -> value.lowercase(Locale.getDefault()).contains(query) })
-        }
-        filtered = when (sortMode) {
-            1 -> filtered.sortedBy { it.name.lowercase(Locale.getDefault()) }
-            2 -> filtered.sortedByDescending { it.name.lowercase(Locale.getDefault()) }
-            3 -> filtered.sortedBy { priceNumber(it.price) }
-            4 -> filtered.sortedByDescending { priceNumber(it.price) }
-            5 -> filtered.sortedByDescending { it.stock }
-            else -> filtered
+        val q = search.text.toString().trim().lowercase()
+        val filtered = products.filter { p ->
+            q.isEmpty() || listOf(p.name, p.category, p.brand, p.price, p.description, p.promotion)
+                .any { it.lowercase().contains(q) }
         }
         countText.text = if (filtered.size == 1) "1 producto" else "${filtered.size} productos"
         stockText.text = "Stock: ${products.sumOf { it.stock }}"
+
         if (filtered.isEmpty()) {
             container.addView(TextView(this).apply {
-                text = if (products.isEmpty()) "Todavía no hay productos.\n\nUsá Importar para cargar un Excel/CSV o pegá una lista." else "No encontramos productos con esa búsqueda."
-                setTextColor(Color.rgb(150, 150, 163)); textSize = 15f; gravity = Gravity.CENTER; setPadding(24, 80, 24, 80)
+                text = if (products.isEmpty()) "Todavía no hay productos.\n\nTocá + para agregar el primero." else "No encontramos productos con esa búsqueda."
+                setTextColor(0xff9696a3.toInt()); textSize = 15f; gravity = Gravity.CENTER
+                setPadding(24, 80, 24, 80)
             })
             return
         }
         filtered.forEach { container.addView(createProductCard(it)) }
     }
 
-    private fun priceNumber(value: String): Double = value.replace(".", "").replace(",", ".").filter { it.isDigit() || it == '.' }.toDoubleOrNull() ?: 0.0
-
-    private fun createProductCard(product: CatalogProduct): View {
-        val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; background = getDrawable(R.drawable.bg_product_card); setPadding(16, 14, 16, 14) }
-        if (product.imageUri.isNotBlank()) {
-            try { card.addView(ImageView(this).apply { setImageURI(Uri.parse(product.imageUri)); scaleType = ImageView.ScaleType.CENTER_CROP }, LinearLayout.LayoutParams(-1, 150).apply { bottomMargin = 10 }) } catch (_: Exception) {}
+    private fun createProductCard(p: CatalogProduct): View {
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = getDrawable(R.drawable.bg_product_card)
+            setPadding(16, 14, 16, 14)
+            setOnClickListener { showProductActions(p) }
         }
-        card.addView(TextView(this).apply { text = product.name; setTextColor(Color.WHITE); textSize = 18f; setTypeface(null, android.graphics.Typeface.BOLD) })
-        val secondary = listOf(product.brand, product.model, product.category).filter { it.isNotBlank() }.joinToString(" • ")
-        if (secondary.isNotBlank()) card.addView(TextView(this).apply { text = secondary; setTextColor(Color.rgb(150, 150, 163)); textSize = 13f; setPadding(0, 4, 0, 0) })
-        card.addView(TextView(this).apply { text = if (product.price.isBlank()) "Precio no cargado" else "$ ${product.price}"; setTextColor(Color.rgb(154, 123, 255)); textSize = 18f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 12, 0, 0) })
-        card.addView(TextView(this).apply { text = if (product.stock <= 0) "Sin stock" else if (product.stock == 1) "Última unidad" else "Stock: ${product.stock}"; setTextColor(if (product.stock > 0) Color.rgb(105, 210, 150) else Color.rgb(235, 105, 105)); textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 4, 0, 0) })
-        if (product.description.isNotBlank()) card.addView(TextView(this).apply { text = product.description; setTextColor(Color.rgb(190, 190, 200)); textSize = 14f; setPadding(0, 10, 0, 0) })
-        if (product.promotion.isNotBlank()) card.addView(TextView(this).apply { text = "PROMO  •  ${product.promotion}"; setTextColor(Color.rgb(255, 190, 80)); textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 8, 0, 0) })
-        card.setOnClickListener { showProductDetail(product) }
+        card.addView(TextView(this).apply { text = p.name; setTextColor(-1); textSize = 18f; setTypeface(null, 1) })
+        if (p.brand.isNotBlank() || p.category.isNotBlank()) card.addView(TextView(this).apply {
+            text = listOf(p.brand, p.category).filter { it.isNotBlank() }.joinToString(" • ")
+            setTextColor(0xff9696a3.toInt()); textSize = 13f; setPadding(0, 4, 0, 0)
+        })
+        card.addView(TextView(this).apply {
+            text = if (p.price.isBlank()) "Precio no cargado" else "$ ${p.price}"
+            setTextColor(0xff9a7bff.toInt()); textSize = 18f; setTypeface(null, 1); setPadding(0, 12, 0, 0)
+        })
+        card.addView(TextView(this).apply {
+            text = when { p.stock <= 0 -> "Sin stock"; p.stock == 1 -> "Última unidad"; else -> "Stock: ${p.stock}" }
+            setTextColor(if (p.stock > 0) 0xff69d296.toInt() else 0xffeb6969.toInt())
+            textSize = 13f; setTypeface(null, 1); setPadding(0, 4, 0, 0)
+        })
+        if (p.description.isNotBlank()) card.addView(TextView(this).apply {
+            text = p.description; setTextColor(0xffbebec8.toInt()); textSize = 14f; setPadding(0, 10, 0, 0)
+        })
+        if (p.promotion.isNotBlank()) card.addView(TextView(this).apply {
+            text = "Promoción: ${p.promotion}"; setTextColor(0xffffbe50.toInt()); textSize = 13f; setPadding(0, 8, 0, 0)
+        })
         card.layoutParams = LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, 0, 0, 12) }
         return card
     }
 
-    private fun showProductDetail(product: CatalogProduct) {
-        val text = buildString {
-            append(product.name).append("\n\n")
-            if (product.brand.isNotBlank()) append("Marca: ").append(product.brand).append('\n')
-            if (product.model.isNotBlank()) append("Modelo: ").append(product.model).append('\n')
-            if (product.category.isNotBlank()) append("Categoría: ").append(product.category).append('\n')
-            append("Precio: ").append(if (product.price.isBlank()) "No cargado" else "$ ${product.price}").append('\n')
-            append("Stock: ").append(product.stock).append(" unidades\n")
-            if (product.description.isNotBlank()) append("\nDescripción\n").append(product.description).append('\n')
-            if (product.promotion.isNotBlank()) append("\nPromoción\n").append(product.promotion)
-        }
-        AlertDialog.Builder(this).setTitle("Detalle del producto").setMessage(text)
-            .setNeutralButton("Editar") { _, _ -> showProductEditor(product) }
-            .setNegativeButton("Eliminar") { _, _ -> confirmDelete(product) }
-            .setPositiveButton("Cerrar", null).show()
-    }
-
-    private fun showImportOptions() {
-        AlertDialog.Builder(this).setTitle("Carga rápida del catálogo")
-            .setItems(arrayOf("Importar Excel / CSV", "Pegar una lista", "Ver formato de ejemplo")) { _, which ->
-                when (which) {
-                    0 -> importFile.launch(arrayOf("text/*", "text/csv", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                    1 -> showPasteDialog()
-                    2 -> showFormatExample()
-                }
+    private fun showProductActions(p: CatalogProduct) {
+        AlertDialog.Builder(this).setTitle(p.name)
+            .setItems(arrayOf("Ver ficha completa", "Editar producto", "Eliminar producto")) { _, which ->
+                when (which) { 0 -> showProductDetails(p); 1 -> showProductEditor(p); 2 -> confirmDelete(p) }
             }.show()
     }
 
-    private fun showFormatExample() {
-        AlertDialog.Builder(this).setTitle("Formato recomendado")
-            .setMessage("Nombre | Categoría | Marca | Modelo | Precio | Stock | Descripción | Promoción\n\nSamsung A25 5G | Celulares | Samsung | A25 5G | 450000 | 3 | 8GB RAM, 256GB | 10% OFF")
-            .setPositiveButton("Entendido", null).show()
-    }
-
-    private fun showPasteDialog() {
-        val input = EditText(this).apply { hint = "Pegá varias filas, una por producto..."; setTextColor(Color.WHITE); setHintTextColor(Color.rgb(115, 115, 125)); textSize = 14f; minLines = 8; gravity = Gravity.TOP; setPadding(14, 14, 14, 14); background = getDrawable(R.drawable.bg_catalog_input) }
-        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 0, 24, 0); addView(input, LinearLayout.LayoutParams(-1, 260)) }
-        val dialog = AlertDialog.Builder(this).setTitle("Pegar lista de productos").setMessage("Columnas: Nombre | Categoría | Marca | Modelo | Precio | Stock | Descripción | Promoción").setView(box).setNegativeButton("Cancelar", null).setPositiveButton("Importar", null).create()
-        dialog.setOnShowListener { dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { val added = importText(input.text.toString()); if (added > 0) { dialog.dismiss(); afterImport(added) } else Toast.makeText(this, "No encontré filas válidas.", Toast.LENGTH_LONG).show() } }
-        dialog.show()
-    }
-
-    private fun importTextFile(uri: Uri) {
-        try {
-            val text = contentResolver.openInputStream(uri)?.use { BufferedReader(InputStreamReader(it, Charsets.UTF_8)).readText() } ?: ""
-            val added = importText(text)
-            if (added > 0) afterImport(added) else Toast.makeText(this, "No encontré filas válidas en el archivo.", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) { Toast.makeText(this, "No se pudo importar: ${e.message}", Toast.LENGTH_LONG).show() }
-    }
-
-    private fun importText(raw: String): Int {
-        val lines = raw.replace("\r", "").lines().filter { it.isNotBlank() }
-        if (lines.isEmpty()) return 0
-        val delimiter = detectDelimiter(lines.first())
-        val first = parseDelimitedLine(lines.first(), delimiter)
-        val start = if (first.firstOrNull()?.trim()?.lowercase(Locale.getDefault()) in setOf("nombre", "producto", "name")) 1 else 0
-        var added = 0
-        for (line in lines.drop(start)) {
-            val c = parseDelimitedLine(line, delimiter)
-            if (c.firstOrNull().orEmpty().trim().isBlank()) continue
-            addRow(c, added++)
+    private fun showProductDetails(p: CatalogProduct) {
+        val text = buildString {
+            append(if (p.brand.isBlank()) "" else "Marca: ${p.brand}\n")
+            append(if (p.category.isBlank()) "" else "Categoría: ${p.category}\n")
+            append("Precio: ${if (p.price.isBlank()) "No cargado" else "$ ${p.price}"}\n")
+            append("Stock: ${p.stock}\n")
+            if (p.description.isNotBlank()) append("\n${p.description}\n")
+            if (p.promotion.isNotBlank()) append("\nPromoción: ${p.promotion}")
         }
-        if (added > 0) { saveProducts(); rebuildCategories(); refreshProducts() }
+        AlertDialog.Builder(this).setTitle(p.name).setMessage(text).setPositiveButton("Cerrar", null).show()
+    }
+
+    private fun showSortOptions() {
+        AlertDialog.Builder(this).setTitle("Ordenar catálogo")
+            .setItems(arrayOf("Orden de carga", "Nombre A-Z", "Nombre Z-A", "Precio menor", "Precio mayor", "Stock mayor")) { _, which ->
+                when (which) {
+                    0 -> Unit
+                    1 -> products.sortBy { it.name.lowercase() }
+                    2 -> products.sortByDescending { it.name.lowercase() }
+                    3 -> products.sortBy { priceNumber(it.price) }
+                    4 -> products.sortByDescending { priceNumber(it.price) }
+                    5 -> products.sortByDescending { it.stock }
+                }
+                refreshProducts()
+            }.show()
+    }
+
+    private fun priceNumber(value: String): Double {
+        val clean = value.replace("$", "").replace(" ", "").replace(".", "").replace(",", ".")
+        return clean.toDoubleOrNull() ?: Double.MAX_VALUE
+    }
+
+    private fun showImportOptions() {
+        AlertDialog.Builder(this).setTitle("Carga masiva")
+            .setItems(arrayOf("Importar CSV", "Pegar una lista", "Ver formato")) { _, which ->
+                when (which) { 0 -> openCsv(); 1 -> showPasteDialog(); 2 -> showFormat() }
+            }.show()
+    }
+
+    private fun openCsv() {
+        startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE); type = "text/*"; putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("text/csv", "text/comma-separated-values", "text/plain"))
+        }, 7001)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 7001 && resultCode == RESULT_OK) data?.data?.let { importCsv(it) }
+    }
+
+    private fun importCsv(uri: Uri) {
+        try {
+            val text = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() } ?: ""
+            val added = importRows(parseDelimited(text))
+            afterImport(added)
+        } catch (e: Exception) { Toast.makeText(this, "No se pudo leer el archivo.", Toast.LENGTH_LONG).show() }
+    }
+
+    private fun parseDelimited(text: String): List<List<String>> {
+        return text.replace("\r", "").split("\n").filter { it.trim().isNotEmpty() }.map { line ->
+            val delimiter = when { line.count { it == ';' } >= 2 -> ';'; line.count { it == '\t' } >= 2 -> '\t'; else -> ',' }
+            splitCsvLine(line, delimiter)
+        }
+    }
+
+    private fun splitCsvLine(line: String, delimiter: Char): List<String> {
+        val out = mutableListOf<String>(); val current = StringBuilder(); var quoted = false; var i = 0
+        while (i < line.length) {
+            val c = line[i]
+            if (c == '"') { if (quoted && i + 1 < line.length && line[i + 1] == '"') { current.append('"'); i++ } else quoted = !quoted }
+            else if (c == delimiter && !quoted) { out.add(current.toString().trim()); current.clear() }
+            else current.append(c)
+            i++
+        }
+        out.add(current.toString().trim()); return out
+    }
+
+    private fun importRows(rows: List<List<String>>): Int {
+        var added = 0
+        rows.forEachIndexed { index, row ->
+            if (index == 0 && row.any { it.lowercase().contains("producto") || it.lowercase().contains("nombre") }) return@forEachIndexed
+            if (row.isEmpty() || row[0].isBlank()) return@forEachIndexed
+            products.add(CatalogProduct(System.currentTimeMillis() + index, row.getOrElse(0) { "" }, row.getOrElse(1) { "" }, row.getOrElse(2) { "" }, row.getOrElse(3) { "" }, row.getOrElse(4) { "0" }.toIntOrNull() ?: 0, row.getOrElse(5) { "" }, row.getOrElse(6) { "" }))
+            added++
+        }
+        if (added > 0) saveProducts()
         return added
     }
 
-    private fun detectDelimiter(line: String): Char = when {
-        line.contains('\t') -> '\t'
-        line.contains('|') -> '|'
-        line.contains(';') -> ';'
-        else -> ','
+    private fun showPasteDialog() {
+        val input = EditText(this).apply { hint = "Producto;Categoría;Marca;Precio;Stock;Descripción;Promoción"; setTextColor(-1); setHintTextColor(0xff777783.toInt()); minLines = 8; gravity = Gravity.TOP }
+        AlertDialog.Builder(this).setTitle("Pegar lista").setView(input).setNegativeButton("Cancelar", null).setPositiveButton("Importar") { _, _ ->
+            val added = importRows(parseDelimited(input.text.toString())); afterImport(added)
+        }.show()
     }
 
-    private fun parseDelimitedLine(line: String, delimiter: Char): List<String> {
-        val out = mutableListOf<String>(); val sb = StringBuilder(); var quoted = false; var i = 0
-        while (i < line.length) {
-            val ch = line[i]
-            if (ch == '"') {
-                if (quoted && i + 1 < line.length && line[i + 1] == '"') { sb.append('"'); i++ } else quoted = !quoted
-            } else if (ch == delimiter && !quoted) { out.add(sb.toString()); sb.setLength(0) } else sb.append(ch)
-            i++
-        }
-        out.add(sb.toString()); return out
+    private fun showFormat() {
+        AlertDialog.Builder(this).setTitle("Formato de importación")
+            .setMessage("Una fila por producto:\n\nProducto;Categoría;Marca;Precio;Stock;Descripción;Promoción\n\nEjemplo:\nCable USB-C;Cables;Samsung;8500;12;Cable de carga rápida;2x1")
+            .setPositiveButton("Cerrar", null).show()
     }
 
-    private fun addRow(c: List<String>, index: Int) {
-        products.add(CatalogProduct(
-            System.currentTimeMillis() + index,
-            c.getOrNull(0).orEmpty().trim(), c.getOrNull(1).orEmpty().trim(), c.getOrNull(2).orEmpty().trim(),
-            c.getOrNull(3).orEmpty().trim(), c.getOrNull(4).orEmpty().trim(), c.getOrNull(5).orEmpty().trim().toIntOrNull() ?: 0,
-            c.getOrNull(6).orEmpty().trim(), c.getOrNull(7).orEmpty().trim()
-        ))
-    }
-
-    private fun importXlsx(uri: Uri) {
-        try {
-            val rows = contentResolver.openInputStream(uri)?.use { parseXlsx(it) } ?: emptyList()
-            val start = if (rows.firstOrNull()?.firstOrNull()?.trim()?.lowercase(Locale.getDefault()) in setOf("nombre", "producto", "name")) 1 else 0
-            var added = 0
-            for (row in rows.drop(start)) {
-                if (row.firstOrNull().orEmpty().trim().isBlank()) continue
-                addRow(row, added++)
-            }
-            if (added > 0) { saveProducts(); rebuildCategories(); refreshProducts(); afterImport(added) } else Toast.makeText(this, "No encontré filas válidas en el Excel.", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) { Toast.makeText(this, "No se pudo leer el Excel: ${e.message}", Toast.LENGTH_LONG).show() }
-    }
-
-    private fun parseXlsx(input: java.io.InputStream): List<List<String>> {
-        val shared = mutableListOf<String>(); var sheet: ByteArray? = null
-        ZipInputStream(input).use { zip ->
-            while (true) {
-                val entry = zip.nextEntry ?: break
-                val bytes = zip.readBytes()
-                when (entry.name) {
-                    "xl/sharedStrings.xml" -> shared.addAll(parseSharedStrings(bytes))
-                    "xl/worksheets/sheet1.xml" -> sheet = bytes
-                }
-            }
-        }
-        return if (sheet == null) emptyList() else parseSheet(sheet!!, shared)
-    }
-
-    private fun parseSharedStrings(bytes: ByteArray): List<String> {
-        val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = false }.newDocumentBuilder().parse(bytes.inputStream())
-        val nodes = doc.getElementsByTagName("si")
-        return (0 until nodes.length).map { i ->
-            val ts = (nodes.item(i) as org.w3c.dom.Element).getElementsByTagName("t")
-            buildString { for (j in 0 until ts.length) append(ts.item(j).textContent) }
-        }
-    }
-
-    private fun parseSheet(bytes: ByteArray, shared: List<String>): List<List<String>> {
-        val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = false }.newDocumentBuilder().parse(bytes.inputStream())
-        val rowNodes = doc.getElementsByTagName("row")
-        val result = mutableListOf<List<String>>()
-        for (i in 0 until rowNodes.length) {
-            val row = rowNodes.item(i) as org.w3c.dom.Element
-            val cells = row.getElementsByTagName("c")
-            val values = mutableListOf<String>()
-            for (j in 0 until cells.length) {
-                val cell = cells.item(j) as org.w3c.dom.Element
-                val ref = cell.getAttribute("r")
-                val col = ref.takeWhile { it.isLetter() }.fold(0) { acc, ch -> acc * 26 + (ch.uppercaseChar() - 'A' + 1) } - 1
-                while (values.size <= col) values.add("")
-                val type = cell.getAttribute("t")
-                val v = cell.getElementsByTagName("v")
-                val raw = if (v.length > 0) v.item(0).textContent else ""
-                values[col] = if (type == "s") shared.getOrNull(raw.toIntOrNull() ?: -1).orEmpty() else raw
-            }
-            if (values.any { it.isNotBlank() }) result.add(values)
-        }
-        return result
-    }
-
-    private fun queryFileName(uri: Uri): String {
-        var name = ""
-        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) name = it.getString(0) }
-        return name
-    }
-
-    private fun afterImport(added: Int) { Toast.makeText(this, "$added productos cargados correctamente.", Toast.LENGTH_LONG).show() }
-
-    private fun showSortOptions() {
-        AlertDialog.Builder(this).setTitle("Ordenar catálogo").setSingleChoiceItems(arrayOf("Orden de carga", "Nombre A → Z", "Nombre Z → A", "Precio menor → mayor", "Precio mayor → menor", "Mayor stock"), sortMode) { dialog, which -> sortMode = which; dialog.dismiss(); refreshProducts() }.show()
+    private fun afterImport(added: Int) {
+        loadProducts(); refreshProducts()
+        Toast.makeText(this, if (added > 0) "Se importaron $added productos." else "No encontré productos válidos.", Toast.LENGTH_LONG).show()
     }
 
     private fun showProductEditor(existing: CatalogProduct?) {
-        val form = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 8, 24, 0) }
-        val name = createInput("Nombre del producto", existing?.name); val category = createInput("Categoría", existing?.category); val brand = createInput("Marca", existing?.brand); val model = createInput("Modelo", existing?.model); val price = createInput("Precio", existing?.price); val stock = createInput("Stock", existing?.stock?.toString()); val description = createInput("Descripción", existing?.description); val promotion = createInput("Promoción", existing?.promotion); val image = createInput("Imagen (opcional)", existing?.imageUri)
-        listOf(name, category, brand, model, price, stock, description, promotion, image).forEach { form.addView(it) }
-        form.addView(Button(this).apply { text = "Elegir foto del producto"; setOnClickListener { pendingImageInput = image; startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply { addCategory(Intent.CATEGORY_OPENABLE); type = "image/*" }, 7001) } })
+        val form = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(28, 8, 28, 0) }
+        val name = createInput("Nombre del producto", existing?.name); val category = createInput("Categoría", existing?.category)
+        val brand = createInput("Marca", existing?.brand); val price = createInput("Precio", existing?.price)
+        val stock = createInput("Stock", existing?.stock?.toString()); val description = createInput("Descripción", existing?.description)
+        val promotion = createInput("Promoción", existing?.promotion)
+        listOf(name, category, brand, price, stock, description, promotion).forEach { form.addView(it) }
         val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "Nuevo producto" else "Editar producto").setView(form).setNegativeButton("Cancelar", null).setPositiveButton(if (existing == null) "Agregar" else "Guardar", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val productName = name.text.toString().trim()
-                if (productName.isBlank()) { name.error = "Ingresá el nombre"; return@setOnClickListener }
-                val stockValue = stock.text.toString().trim().toIntOrNull() ?: 0
-                if (stockValue < 0) { stock.error = "Stock inválido"; return@setOnClickListener }
-                if (existing == null) products.add(CatalogProduct(System.currentTimeMillis(), productName, category.text.toString().trim(), brand.text.toString().trim(), model.text.toString().trim(), price.text.toString().trim(), stockValue, description.text.toString().trim(), promotion.text.toString().trim(), image.text.toString().trim()))
-                else { existing.name = productName; existing.category = category.text.toString().trim(); existing.brand = brand.text.toString().trim(); existing.model = model.text.toString().trim(); existing.price = price.text.toString().trim(); existing.stock = stockValue; existing.description = description.text.toString().trim(); existing.promotion = promotion.text.toString().trim(); existing.imageUri = image.text.toString().trim() }
-                saveProducts(); rebuildCategories(); refreshProducts(); dialog.dismiss(); Toast.makeText(this, if (existing == null) "Producto agregado" else "Producto actualizado", Toast.LENGTH_SHORT).show()
+                val n = name.text.toString().trim(); if (n.isBlank()) { name.error = "Ingresá el nombre"; return@setOnClickListener }
+                val s = stock.text.toString().trim().toIntOrNull() ?: 0; if (s < 0) { stock.error = "Stock inválido"; return@setOnClickListener }
+                if (existing == null) products.add(CatalogProduct(System.currentTimeMillis(), n, category.text.toString().trim(), brand.text.toString().trim(), price.text.toString().trim(), s, description.text.toString().trim(), promotion.text.toString().trim()))
+                else { existing.name = n; existing.category = category.text.toString().trim(); existing.brand = brand.text.toString().trim(); existing.price = price.text.toString().trim(); existing.stock = s; existing.description = description.text.toString().trim(); existing.promotion = promotion.text.toString().trim() }
+                saveProducts(); refreshProducts(); dialog.dismiss()
             }
         }
         dialog.show()
     }
 
     private fun createInput(hint: String, value: String?): EditText = EditText(this).apply {
-        this.hint = hint; setText(value ?: ""); setTextColor(Color.WHITE); setHintTextColor(Color.rgb(115, 115, 125)); textSize = 15f; setSingleLine(false); setPadding(14, 10, 14, 10); background = getDrawable(R.drawable.bg_catalog_input)
-        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, 0, 0, 8) }
+        this.hint = hint; setText(value ?: ""); setTextColor(-1); setHintTextColor(0xff73737d.toInt()); textSize = 15f
+        setPadding(14, 10, 14, 10); background = getDrawable(R.drawable.bg_catalog_input)
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { setMargins(0, 0, 0, 10) }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 7001 && resultCode == RESULT_OK) data?.data?.let { uri ->
-            try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
-            pendingImageInput?.setText(uri.toString()); pendingImageInput = null
-        }
-    }
-
-    private fun confirmDelete(product: CatalogProduct) {
-        AlertDialog.Builder(this).setTitle("Eliminar producto").setMessage("¿Querés eliminar \"${product.name}\" del catálogo?")
-            .setNegativeButton("Cancelar", null).setPositiveButton("Eliminar") { _, _ -> products.removeAll { it.id == product.id }; saveProducts(); refreshProducts(); rebuildCategories(); Toast.makeText(this, "Producto eliminado", Toast.LENGTH_SHORT).show() }.show()
+    private fun confirmDelete(p: CatalogProduct) {
+        AlertDialog.Builder(this).setTitle("Eliminar producto").setMessage("¿Querés eliminar \"${p.name}\"?")
+            .setNegativeButton("Cancelar", null).setPositiveButton("Eliminar") { _, _ -> products.removeAll { it.id == p.id }; saveProducts(); refreshProducts() }.show()
     }
 }
