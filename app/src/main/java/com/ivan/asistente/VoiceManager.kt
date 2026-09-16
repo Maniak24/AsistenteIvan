@@ -21,7 +21,7 @@ class VoiceManager(private val context: Context) {
     suspend fun initialize() = withContext(Dispatchers.IO) {
         if (tts != null) return@withContext
 
-        copyAssets("voz", File(context.filesDir, "voz"))
+        copyAssets("voz", modelDir)
 
         val modelFile = File(modelDir, "es_AR-daniela-high.onnx")
         val tokensFile = File(modelDir, "tokens.txt")
@@ -38,7 +38,7 @@ class VoiceManager(private val context: Context) {
                     tokens = tokensFile.absolutePath,
                     dataDir = dataDir.absolutePath
                 ),
-                numThreads = 1,
+                numThreads = 2,
                 debug = false
             )
         )
@@ -47,26 +47,27 @@ class VoiceManager(private val context: Context) {
     }
 
     suspend fun speak(text: String) = withContext(Dispatchers.IO) {
-        val engine = tts ?: return@withContext
         if (text.isBlank()) return@withContext
+        if (tts == null) initialize()
+        val engine = tts ?: return@withContext
 
-        val audio = engine.generate(
+        engine.generate(
             text = text,
             sid = 0,
             speed = 1.0f
-        )
-
-        playAudio(audio.samples, audio.sampleRate)
+        ).let { audio ->
+            playAudio(audio.samples, audio.sampleRate)
+        }
     }
 
     private fun playAudio(samples: FloatArray, sampleRate: Int) {
         val pcm = ShortArray(samples.size)
 
         for (i in samples.indices) {
-            val value = (samples[i] * 32767f)
+            pcm[i] = (samples[i] * 32767f)
                 .coerceIn(-32768f, 32767f)
                 .roundToInt()
-            pcm[i] = value.toShort()
+                .toShort()
         }
 
         val bufferSize = AudioTrack.getMinBufferSize(
@@ -93,13 +94,14 @@ class VoiceManager(private val context: Context) {
             .setTransferMode(AudioTrack.MODE_STATIC)
             .build()
 
-        audioTrack.write(pcm, 0, pcm.size)
-        audioTrack.play()
-
-        Thread.sleep((pcm.size * 1000L / sampleRate) + 200)
-
-        audioTrack.stop()
-        audioTrack.release()
+        try {
+            audioTrack.write(pcm, 0, pcm.size)
+            audioTrack.play()
+            Thread.sleep((pcm.size * 1000L / sampleRate) + 120)
+        } finally {
+            runCatching { audioTrack.stop() }
+            audioTrack.release()
+        }
     }
 
     fun release() {
@@ -116,16 +118,13 @@ class VoiceManager(private val context: Context) {
         for (entry in entries) {
             val sourcePath = "$assetPath/$entry"
             val target = File(destination, entry)
-
             val children = assetManager.list(sourcePath)
 
             if (children != null && children.isNotEmpty()) {
                 copyAssets(sourcePath, target)
             } else {
                 assetManager.open(sourcePath).use { input ->
-                    target.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
+                    target.outputStream().use { output -> input.copyTo(output) }
                 }
             }
         }
