@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Gravity
@@ -15,12 +16,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONArray
 import org.json.JSONObject
-import org.xmlpull.v1.XmlPullParser
-import android.util.Xml
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.Locale
 import java.util.zip.ZipInputStream
+import javax.xml.parsers.DocumentBuilderFactory
 
 private data class CatalogProduct(
     val id: Long,
@@ -48,10 +48,9 @@ class CatalogActivity : AppCompatActivity() {
     private val prefs by lazy { getSharedPreferences("mi_pc_catalog", Context.MODE_PRIVATE) }
 
     private val importFile = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri ?: return@registerForActivityResult
+        if (uri == null) return@registerForActivityResult
         try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
-        val name = queryFileName(uri).lowercase(Locale.getDefault())
-        if (name.endsWith(".xlsx")) importXlsx(uri) else importTextFile(uri)
+        if (queryFileName(uri).lowercase(Locale.getDefault()).endsWith(".xlsx")) importXlsx(uri) else importTextFile(uri)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,21 +147,18 @@ class CatalogActivity : AppCompatActivity() {
         filtered.forEach { container.addView(createProductCard(it)) }
     }
 
-    private fun priceNumber(value: String): Double = value.replace(".", "").replace(",", ".")
-        .filter { it.isDigit() || it == '.' }.toDoubleOrNull() ?: 0.0
+    private fun priceNumber(value: String): Double = value.replace(".", "").replace(",", ".").filter { it.isDigit() || it == '.' }.toDoubleOrNull() ?: 0.0
 
     private fun createProductCard(product: CatalogProduct): View {
         val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; background = getDrawable(R.drawable.bg_product_card); setPadding(16, 14, 16, 14) }
         if (product.imageUri.isNotBlank()) {
-            try {
-                card.addView(ImageView(this).apply { setImageURI(Uri.parse(product.imageUri)); scaleType = ImageView.ScaleType.CENTER_CROP }, LinearLayout.LayoutParams(-1, 150).apply { bottomMargin = 10 })
-            } catch (_: Exception) {}
+            try { card.addView(ImageView(this).apply { setImageURI(Uri.parse(product.imageUri)); scaleType = ImageView.ScaleType.CENTER_CROP }, LinearLayout.LayoutParams(-1, 150).apply { bottomMargin = 10 }) } catch (_: Exception) {}
         }
         card.addView(TextView(this).apply { text = product.name; setTextColor(Color.WHITE); textSize = 18f; setTypeface(null, android.graphics.Typeface.BOLD) })
         val secondary = listOf(product.brand, product.model, product.category).filter { it.isNotBlank() }.joinToString(" • ")
         if (secondary.isNotBlank()) card.addView(TextView(this).apply { text = secondary; setTextColor(Color.rgb(150, 150, 163)); textSize = 13f; setPadding(0, 4, 0, 0) })
         card.addView(TextView(this).apply { text = if (product.price.isBlank()) "Precio no cargado" else "$ ${product.price}"; setTextColor(Color.rgb(154, 123, 255)); textSize = 18f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 12, 0, 0) })
-        card.addView(TextView(this).apply { text = when { product.stock <= 0 -> "Sin stock"; product.stock == 1 -> "Última unidad"; else -> "Stock: ${product.stock}" }; setTextColor(if (product.stock > 0) Color.rgb(105, 210, 150) else Color.rgb(235, 105, 105)); textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 4, 0, 0) })
+        card.addView(TextView(this).apply { text = if (product.stock <= 0) "Sin stock" else if (product.stock == 1) "Última unidad" else "Stock: ${product.stock}"; setTextColor(if (product.stock > 0) Color.rgb(105, 210, 150) else Color.rgb(235, 105, 105)); textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 4, 0, 0) })
         if (product.description.isNotBlank()) card.addView(TextView(this).apply { text = product.description; setTextColor(Color.rgb(190, 190, 200)); textSize = 14f; setPadding(0, 10, 0, 0) })
         if (product.promotion.isNotBlank()) card.addView(TextView(this).apply { text = "PROMO  •  ${product.promotion}"; setTextColor(Color.rgb(255, 190, 80)); textSize = 13f; setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, 8, 0, 0) })
         card.setOnClickListener { showProductDetail(product) }
@@ -200,23 +196,15 @@ class CatalogActivity : AppCompatActivity() {
 
     private fun showFormatExample() {
         AlertDialog.Builder(this).setTitle("Formato recomendado")
-            .setMessage("Nombre | Categoría | Marca | Modelo | Precio | Stock | Descripción | Promoción\n\nEjemplo:\nSamsung A25 5G | Celulares | Samsung | A25 5G | 450000 | 3 | 8GB RAM, 256GB | 10% OFF\nCargador USB-C 25W | Accesorios | Samsung | EP-T2510 | 25000 | 12 | Carga rápida |")
+            .setMessage("Nombre | Categoría | Marca | Modelo | Precio | Stock | Descripción | Promoción\n\nSamsung A25 5G | Celulares | Samsung | A25 5G | 450000 | 3 | 8GB RAM, 256GB | 10% OFF")
             .setPositiveButton("Entendido", null).show()
     }
 
     private fun showPasteDialog() {
-        val input = EditText(this).apply {
-            hint = "Pegá varias filas, una por producto..."; setTextColor(Color.WHITE); setHintTextColor(Color.rgb(115, 115, 125)); textSize = 14f
-            minLines = 8; gravity = Gravity.TOP; setPadding(14, 14, 14, 14); background = getDrawable(R.drawable.bg_catalog_input)
-        }
+        val input = EditText(this).apply { hint = "Pegá varias filas, una por producto..."; setTextColor(Color.WHITE); setHintTextColor(Color.rgb(115, 115, 125)); textSize = 14f; minLines = 8; gravity = Gravity.TOP; setPadding(14, 14, 14, 14); background = getDrawable(R.drawable.bg_catalog_input) }
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(24, 0, 24, 0); addView(input, LinearLayout.LayoutParams(-1, 260)) }
-        val dialog = AlertDialog.Builder(this).setTitle("Pegar lista de productos")
-            .setMessage("Columnas: Nombre | Categoría | Marca | Modelo | Precio | Stock | Descripción | Promoción")
-            .setView(box).setNegativeButton("Cancelar", null).setPositiveButton("Importar", null).create()
-        dialog.setOnShowListener { dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-            val added = importText(input.text.toString())
-            if (added > 0) { dialog.dismiss(); afterImport(added) } else Toast.makeText(this, "No encontré filas válidas.", Toast.LENGTH_LONG).show()
-        }}
+        val dialog = AlertDialog.Builder(this).setTitle("Pegar lista de productos").setMessage("Columnas: Nombre | Categoría | Marca | Modelo | Precio | Stock | Descripción | Promoción").setView(box).setNegativeButton("Cancelar", null).setPositiveButton("Importar", null).create()
+        dialog.setOnShowListener { dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { val added = importText(input.text.toString()); if (added > 0) { dialog.dismiss(); afterImport(added) } else Toast.makeText(this, "No encontré filas válidas.", Toast.LENGTH_LONG).show() } }
         dialog.show()
     }
 
@@ -229,103 +217,112 @@ class CatalogActivity : AppCompatActivity() {
     }
 
     private fun importText(raw: String): Int {
-        val clean = raw.replace("\r", "").trim()
-        if (clean.isBlank()) return 0
-        val lines = clean.lines().filter { it.isNotBlank() }
-        val delimiter = when { lines.first().contains('\t') -> '\t'; lines.first().contains(';') -> ';'; else -> ',' }
-        var start = 0
-        val first = parseCsvLine(lines.first(), delimiter)
-        if (first.firstOrNull()?.trim()?.lowercase(Locale.getDefault()) in setOf("nombre", "producto", "name")) start = 1
+        val lines = raw.replace("\r", "").lines().filter { it.isNotBlank() }
+        if (lines.isEmpty()) return 0
+        val delimiter = detectDelimiter(lines.first())
+        val first = parseDelimitedLine(lines.first(), delimiter)
+        val start = if (first.firstOrNull()?.trim()?.lowercase(Locale.getDefault()) in setOf("nombre", "producto", "name")) 1 else 0
         var added = 0
         for (line in lines.drop(start)) {
-            val c = parseCsvLine(line, delimiter)
-            if (c.isEmpty() || c[0].trim().isBlank()) continue
-            products.add(CatalogProduct(System.currentTimeMillis() + added, c.getOrNull(0).orEmpty().trim(), c.getOrNull(1).orEmpty().trim(), c.getOrNull(2).orEmpty().trim(), c.getOrNull(3).orEmpty().trim(), c.getOrNull(4).orEmpty().trim(), c.getOrNull(5)?.trim()?.toIntOrNull() ?: 0, c.getOrNull(6).orEmpty().trim(), c.getOrNull(7).orEmpty().trim()))
-            added++
+            val c = parseDelimitedLine(line, delimiter)
+            if (c.firstOrNull().orEmpty().trim().isBlank()) continue
+            addRow(c, added++)
         }
         if (added > 0) { saveProducts(); rebuildCategories(); refreshProducts() }
         return added
     }
 
-    private fun parseCsvLine(line: String, delimiter: Char): List<String> {
+    private fun detectDelimiter(line: String): Char = when {
+        line.contains('\t') -> '\t'
+        line.contains('|') -> '|'
+        line.contains(';') -> ';'
+        else -> ','
+    }
+
+    private fun parseDelimitedLine(line: String, delimiter: Char): List<String> {
         val out = mutableListOf<String>(); val sb = StringBuilder(); var quoted = false; var i = 0
         while (i < line.length) {
             val ch = line[i]
-            if (ch == '"') { if (quoted && i + 1 < line.length && line[i + 1] == '"') { sb.append('"'); i++ } else quoted = !quoted }
-            else if (ch == delimiter && !quoted) { out.add(sb.toString()); sb.setLength(0) } else sb.append(ch)
+            if (ch == '"') {
+                if (quoted && i + 1 < line.length && line[i + 1] == '"') { sb.append('"'); i++ } else quoted = !quoted
+            } else if (ch == delimiter && !quoted) { out.add(sb.toString()); sb.setLength(0) } else sb.append(ch)
             i++
         }
         out.add(sb.toString()); return out
     }
 
+    private fun addRow(c: List<String>, index: Int) {
+        products.add(CatalogProduct(
+            System.currentTimeMillis() + index,
+            c.getOrNull(0).orEmpty().trim(), c.getOrNull(1).orEmpty().trim(), c.getOrNull(2).orEmpty().trim(),
+            c.getOrNull(3).orEmpty().trim(), c.getOrNull(4).orEmpty().trim(), c.getOrNull(5).orEmpty().trim().toIntOrNull() ?: 0,
+            c.getOrNull(6).orEmpty().trim(), c.getOrNull(7).orEmpty().trim()
+        ))
+    }
+
     private fun importXlsx(uri: Uri) {
         try {
             val rows = contentResolver.openInputStream(uri)?.use { parseXlsx(it) } ?: emptyList()
-            val added = importRows(rows)
-            if (added > 0) afterImport(added) else Toast.makeText(this, "No encontré filas válidas en el Excel.", Toast.LENGTH_LONG).show()
+            val start = if (rows.firstOrNull()?.firstOrNull()?.trim()?.lowercase(Locale.getDefault()) in setOf("nombre", "producto", "name")) 1 else 0
+            var added = 0
+            for (row in rows.drop(start)) {
+                if (row.firstOrNull().orEmpty().trim().isBlank()) continue
+                addRow(row, added++)
+            }
+            if (added > 0) { saveProducts(); rebuildCategories(); refreshProducts(); afterImport(added) } else Toast.makeText(this, "No encontré filas válidas en el Excel.", Toast.LENGTH_LONG).show()
         } catch (e: Exception) { Toast.makeText(this, "No se pudo leer el Excel: ${e.message}", Toast.LENGTH_LONG).show() }
     }
 
     private fun parseXlsx(input: java.io.InputStream): List<List<String>> {
-        val zip = ZipInputStream(input)
-        val shared = mutableListOf<String>(); var sheetBytes: ByteArray? = null
-        while (true) {
-            val entry = zip.nextEntry ?: break
-            val name = entry.name
-            val bytes = zip.readBytes()
-            if (name == "xl/sharedStrings.xml") shared.addAll(parseSharedStrings(bytes))
-            if (name == "xl/worksheets/sheet1.xml") sheetBytes = bytes
+        val shared = mutableListOf<String>(); var sheet: ByteArray? = null
+        ZipInputStream(input).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                val bytes = zip.readBytes()
+                when (entry.name) {
+                    "xl/sharedStrings.xml" -> shared.addAll(parseSharedStrings(bytes))
+                    "xl/worksheets/sheet1.xml" -> sheet = bytes
+                }
+            }
         }
-        return if (sheetBytes != null) parseWorksheet(sheetBytes!!, shared) else emptyList()
+        return if (sheet == null) emptyList() else parseSheet(sheet!!, shared)
     }
 
     private fun parseSharedStrings(bytes: ByteArray): List<String> {
-        val parser = Xml.newPullParser(); parser.setInput(bytes.inputStream(), "UTF-8"); val result = mutableListOf<String>(); var text = StringBuilder(); var inside = false
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            if (parser.eventType == XmlPullParser.START_TAG && parser.name == "t") { inside = true; text = StringBuilder() }
-            else if (parser.eventType == XmlPullParser.TEXT && inside) text.append(parser.text)
-            else if (parser.eventType == XmlPullParser.END_TAG && parser.name == "t" && inside) { result.add(text.toString()); inside = false }
+        val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = false }.newDocumentBuilder().parse(bytes.inputStream())
+        val nodes = doc.getElementsByTagName("si")
+        return (0 until nodes.length).map { i ->
+            val ts = (nodes.item(i) as org.w3c.dom.Element).getElementsByTagName("t")
+            buildString { for (j in 0 until ts.length) append(ts.item(j).textContent) }
+        }
+    }
+
+    private fun parseSheet(bytes: ByteArray, shared: List<String>): List<List<String>> {
+        val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = false }.newDocumentBuilder().parse(bytes.inputStream())
+        val rowNodes = doc.getElementsByTagName("row")
+        val result = mutableListOf<List<String>>()
+        for (i in 0 until rowNodes.length) {
+            val row = rowNodes.item(i) as org.w3c.dom.Element
+            val cells = row.getElementsByTagName("c")
+            val values = mutableListOf<String>()
+            for (j in 0 until cells.length) {
+                val cell = cells.item(j) as org.w3c.dom.Element
+                val ref = cell.getAttribute("r")
+                val col = ref.takeWhile { it.isLetter() }.fold(0) { acc, ch -> acc * 26 + (ch.uppercaseChar() - 'A' + 1) } - 1
+                while (values.size <= col) values.add("")
+                val type = cell.getAttribute("t")
+                val v = cell.getElementsByTagName("v")
+                val raw = if (v.length > 0) v.item(0).textContent else ""
+                values[col] = if (type == "s") shared.getOrNull(raw.toIntOrNull() ?: -1).orEmpty() else raw
+            }
+            if (values.any { it.isNotBlank() }) result.add(values)
         }
         return result
     }
 
-    private fun parseWorksheet(bytes: ByteArray, shared: List<String>): List<List<String>> {
-        val parser = Xml.newPullParser(); parser.setInput(bytes.inputStream(), "UTF-8")
-        val rows = mutableListOf<List<String>>(); var row = mutableListOf<String>(); var cellIndex = 0; var cellType = ""; var cellRef = ""; var value = ""; var inValue = false; var inline = false
-        while (parser.next() != XmlPullParser.END_DOCUMENT) {
-            when (parser.eventType) {
-                XmlPullParser.START_TAG -> when (parser.name) {
-                    "row" -> { row = mutableListOf(); cellIndex = 0 }
-                    "c" -> { cellRef = parser.getAttributeValue(null, "r") ?: ""; cellType = parser.getAttributeValue(null, "t") ?: ""; value = ""; inline = cellType == "inlineStr"; val letters = cellRef.takeWhile { it.isLetter() }; cellIndex = letters.fold(0) { acc, ch -> acc * 26 + (ch.uppercaseChar() - 'A' + 1) } - 1 }
-                    "v", "t" -> if (cellType == "s" || inline || parser.name == "v") inValue = true
-                }
-                XmlPullParser.TEXT -> if (inValue) value += parser.text
-                XmlPullParser.END_TAG -> when (parser.name) {
-                    "v", "t" -> inValue = false
-                    "c" -> { while (row.size <= cellIndex) row.add(""); row[cellIndex] = if (cellType == "s") shared.getOrNull(value.toIntOrNull() ?: -1).orEmpty() else value; cellIndex++ }
-                    "row" -> if (row.any { it.isNotBlank() }) rows.add(row)
-                }
-            }
-        }
-        return rows
-    }
-
-    private fun importRows(rows: List<List<String>>): Int {
-        if (rows.isEmpty()) return 0
-        val start = if (rows.firstOrNull()?.firstOrNull()?.trim()?.lowercase(Locale.getDefault()) in setOf("nombre", "producto", "name")) 1 else 0
-        var added = 0
-        for (r in rows.drop(start)) {
-            if (r.getOrNull(0).orEmpty().trim().isBlank()) continue
-            products.add(CatalogProduct(System.currentTimeMillis() + added, r.getOrNull(0).orEmpty().trim(), r.getOrNull(1).orEmpty().trim(), r.getOrNull(2).orEmpty().trim(), r.getOrNull(3).orEmpty().trim(), r.getOrNull(4).orEmpty().trim(), r.getOrNull(5)?.trim()?.toIntOrNull() ?: 0, r.getOrNull(6).orEmpty().trim(), r.getOrNull(7).orEmpty().trim()))
-            added++
-        }
-        if (added > 0) { saveProducts(); rebuildCategories(); refreshProducts() }
-        return added
-    }
-
     private fun queryFileName(uri: Uri): String {
         var name = ""
-        contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) name = it.getString(0) }
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { if (it.moveToFirst()) name = it.getString(0) }
         return name
     }
 
@@ -343,8 +340,10 @@ class CatalogActivity : AppCompatActivity() {
         val dialog = AlertDialog.Builder(this).setTitle(if (existing == null) "Nuevo producto" else "Editar producto").setView(form).setNegativeButton("Cancelar", null).setPositiveButton(if (existing == null) "Agregar" else "Guardar", null).create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val productName = name.text.toString().trim(); if (productName.isBlank()) { name.error = "Ingresá el nombre"; return@setOnClickListener }
-                val stockValue = stock.text.toString().trim().toIntOrNull() ?: 0; if (stockValue < 0) { stock.error = "Stock inválido"; return@setOnClickListener }
+                val productName = name.text.toString().trim()
+                if (productName.isBlank()) { name.error = "Ingresá el nombre"; return@setOnClickListener }
+                val stockValue = stock.text.toString().trim().toIntOrNull() ?: 0
+                if (stockValue < 0) { stock.error = "Stock inválido"; return@setOnClickListener }
                 if (existing == null) products.add(CatalogProduct(System.currentTimeMillis(), productName, category.text.toString().trim(), brand.text.toString().trim(), model.text.toString().trim(), price.text.toString().trim(), stockValue, description.text.toString().trim(), promotion.text.toString().trim(), image.text.toString().trim()))
                 else { existing.name = productName; existing.category = category.text.toString().trim(); existing.brand = brand.text.toString().trim(); existing.model = model.text.toString().trim(); existing.price = price.text.toString().trim(); existing.stock = stockValue; existing.description = description.text.toString().trim(); existing.promotion = promotion.text.toString().trim(); existing.imageUri = image.text.toString().trim() }
                 saveProducts(); rebuildCategories(); refreshProducts(); dialog.dismiss(); Toast.makeText(this, if (existing == null) "Producto agregado" else "Producto actualizado", Toast.LENGTH_SHORT).show()
