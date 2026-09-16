@@ -9,55 +9,47 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:paddingTop="56dp"
-        android:paddingBottom="32dp">
+        android:paddingTop="54dp"
+        android:paddingBottom="28dp">
 
         <TextView
-            android:id="@+id/voice_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="MI PC"
             android:textColor="#FFFFFF"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:letterSpacing="0.08" />
 
         <TextView
-            android:id="@+id/voice_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Tu asistente inteligente"
-            android:textColor="#9D9DA8"
+            android:layout_marginTop="5dp"
+            android:text="Conversación por voz"
+            android:textColor="#92929E"
             android:textSize="14sp" />
 
         <FrameLayout
             android:id="@+id/voice_orb_container"
-            android:layout_width="230dp"
-            android:layout_height="230dp"
-            android:layout_marginTop="95dp"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:layout_marginTop="82dp"
             android:gravity="center">
 
             <View
                 android:id="@+id/voice_orb_glow"
-                android:layout_width="230dp"
-                android:layout_height="230dp"
-                android:background="@drawable/bg_voice_orb_glow" />
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_voice_orb_glow"
+                android:alpha="0.72" />
 
             <View
                 android:id="@+id/voice_orb"
-                android:layout_width="155dp"
-                android:layout_height="155dp"
+                android:layout_width="164dp"
+                android:layout_height="164dp"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_voice_orb" />
-
-            <TextView
-                android:id="@+id/voice_orb_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="⚡"
-                android:textColor="#FFFFFF"
-                android:textSize="42sp" />
 
         </FrameLayout>
 
@@ -65,7 +57,7 @@
             android:id="@+id/voice_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="42dp"
+            android:layout_marginTop="36dp"
             android:text="Escuchando…"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
@@ -73,12 +65,12 @@
 
         <TextView
             android:id="@+id/voice_hint"
-            android:layout_width="280dp"
+            android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
-            android:text="Hablá normalmente. Mi PC te está escuchando."
-            android:textColor="#8E8E99"
+            android:text="Hablá normalmente. Mi PC escucha y responde automáticamente."
+            android:textColor="#858592"
             android:textSize="14sp" />
 
         <Space
@@ -88,17 +80,18 @@
 
         <ImageButton
             android:id="@+id/voice_close"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="62dp"
+            android:layout_height="62dp"
             android:background="@drawable/bg_voice_close"
-            android:contentDescription="Finalizar llamada"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:tint="#FFFFFF" />
+            android:contentDescription="Finalizar conversación"
+            android:src="@drawable/ic_close"
+            android:tint="#FFFFFF"
+            android:padding="17dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="9dp"
             android:text="Finalizar"
             android:textColor="#8E8E99"
             android:textSize="13sp" />
