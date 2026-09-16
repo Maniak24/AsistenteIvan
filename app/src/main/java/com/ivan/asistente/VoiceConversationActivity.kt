@@ -4,6 +4,8 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
@@ -49,7 +51,14 @@ class VoiceConversationActivity : AppCompatActivity() {
             finish()
         }
 
+        playCallStartSound()
         setListening()
+    }
+
+    private fun playCallStartSound() {
+        val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 45)
+        tone.startTone(ToneGenerator.TONE_PROP_ACK, 125)
+        tone.release()
     }
 
     private fun setListening() {
