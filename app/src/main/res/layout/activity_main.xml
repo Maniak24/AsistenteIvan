@@ -10,7 +10,6 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <!-- HEADER -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -70,14 +69,10 @@
                     android:text="Comprobando conexión..."
                     android:textSize="12sp"
                     android:textColor="#A7A7B3" />
-
             </LinearLayout>
-
         </LinearLayout>
-
     </LinearLayout>
 
-    <!-- Metadata oculto -->
     <TextView
         android:id="@+id/gguf"
         android:layout_width="0dp"
@@ -88,7 +83,42 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- CHAT -->
+    <LinearLayout
+        android:id="@+id/intro_panel"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingBottom="48dp"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toTopOf="@id/input_container"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.ivan.asistente.IntroRobotView
+            android:layout_width="82dp"
+            android:layout_height="82dp"
+            android:contentDescription="Robot de Mi PC" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="Hola, soy Mi PC"
+            android:textColor="#FFFFFF"
+            android:textSize="23sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Tu asistente para tecnología, productos y soporte de Mi PC."
+            android:textColor="#92929E"
+            android:textSize="14sp" />
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messages"
         android:layout_width="0dp"
@@ -102,6 +132,7 @@
         android:clipToPadding="false"
         android:fadeScrollbars="false"
         android:scrollbars="vertical"
+        android:background="#111116"
         app:reverseLayout="false"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintBottom_toTopOf="@id/input_container"
@@ -109,7 +140,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_message_assistant" />
 
-    <!-- ZONA DE ESCRITURA -->
     <LinearLayout
         android:id="@+id/input_container"
         android:layout_width="0dp"
@@ -185,9 +215,7 @@
                     android:contentDescription="Grabar audio"
                     android:src="@drawable/ic_mic"
                     android:padding="11dp" />
-
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -201,10 +229,8 @@
             app:backgroundTint="#8B6CFF"
             app:fabSize="normal"
             app:maxImageSize="22dp" />
-
     </LinearLayout>
 
-    <!-- MENÚ LATERAL -->
     <LinearLayout
         android:id="@+id/side_menu"
         android:layout_width="300dp"
@@ -257,48 +283,33 @@
 
         <TextView
             android:id="@+id/menu_new_chat"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:gravity="center_vertical"
-            android:text="＋  Nuevo chat"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            style="@style/MenuItem"
+            android:drawableStart="@drawable/ic_menu_new_chat"
+            android:text="Nuevo chat" />
 
         <TextView
             android:id="@+id/menu_files"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:gravity="center_vertical"
-            android:text="▣  Archivos"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            style="@style/MenuItem"
+            android:drawableStart="@drawable/ic_menu_files"
+            android:text="Archivos" />
 
         <TextView
             android:id="@+id/menu_catalog"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:gravity="center_vertical"
-            android:text="🛍️  Catálogo"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            style="@style/MenuItem"
+            android:drawableStart="@drawable/ic_menu_catalog"
+            android:text="Catálogo" />
 
         <TextView
             android:id="@+id/menu_history"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:gravity="center_vertical"
-            android:text="◷  Historial"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            style="@style/MenuItem"
+            android:drawableStart="@drawable/ic_menu_history"
+            android:text="Historial" />
 
         <TextView
             android:id="@+id/menu_settings"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:gravity="center_vertical"
-            android:text="⚙  Configuración"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+            style="@style/MenuItem"
+            android:drawableStart="@drawable/ic_menu_settings"
+            android:text="Configuración" />
 
     </LinearLayout>
 
