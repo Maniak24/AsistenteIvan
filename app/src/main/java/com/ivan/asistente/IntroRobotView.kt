@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.min
 
 class IntroRobotView @JvmOverloads constructor(
@@ -18,9 +19,11 @@ class IntroRobotView @JvmOverloads constructor(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var lift = 0f
     private var animator: ValueAnimator? = null
+    private var observer: RecyclerView.AdapterDataObserver? = null
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+
         animator = ValueAnimator.ofFloat(0f, -5f, 0f).apply {
             duration = 2200L
             repeatCount = ValueAnimator.INFINITE
@@ -31,9 +34,31 @@ class IntroRobotView @JvmOverloads constructor(
             }
             start()
         }
+
+        post {
+            val recycler = rootView.findViewById<RecyclerView>(R.id.messages) ?: return@post
+            val panel = parent as? View ?: return@post
+
+            fun syncVisibility() {
+                panel.visibility = if (recycler.adapter?.itemCount ?: 0 == 0) View.VISIBLE else View.GONE
+            }
+
+            observer = object : RecyclerView.AdapterDataObserver() {
+                override fun onChanged() = syncVisibility()
+                override fun onItemRangeInserted(positionStart: Int, itemCount: Int) = syncVisibility()
+                override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) = syncVisibility()
+                override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) = syncVisibility()
+                override fun onItemRangeChanged(positionStart: Int, itemCount: Int) = syncVisibility()
+            }
+            recycler.adapter?.registerAdapterDataObserver(observer!!)
+            syncVisibility()
+        }
     }
 
     override fun onDetachedFromWindow() {
+        val recycler = rootView.findViewById<RecyclerView>(R.id.messages)
+        observer?.let { recycler?.adapter?.unregisterAdapterDataObserver(it) }
+        observer = null
         animator?.cancel()
         animator = null
         super.onDetachedFromWindow()
