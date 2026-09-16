@@ -39,7 +39,6 @@
             android:layout_weight="1"
             android:layout_marginStart="14dp"
             android:orientation="vertical">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -48,20 +47,17 @@
                 android:textStyle="bold"
                 android:letterSpacing="0.08"
                 android:textColor="#FFFFFF" />
-
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="3dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
-
                 <View
                     android:layout_width="7dp"
                     android:layout_height="7dp"
                     android:layout_marginEnd="6dp"
                     android:background="@drawable/bg_action_button" />
-
                 <TextView
                     android:id="@+id/connection_status"
                     android:layout_width="wrap_content"
@@ -95,27 +91,38 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <com.ivan.asistente.IntroRobotView
-            android:layout_width="82dp"
-            android:layout_height="82dp"
-            android:contentDescription="Robot de Mi PC" />
+        <com.ivan.asistente.MiPcLogoView
+            android:layout_width="94dp"
+            android:layout_height="94dp"
+            android:contentDescription="Logo animado de Mi PC" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="Hola, soy Mi PC"
+            android:layout_marginTop="20dp"
+            android:text="MI PC"
             android:textColor="#FFFFFF"
-            android:textSize="23sp"
-            android:textStyle="bold" />
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.12" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dp"
+            android:text="EL FUTURO ES HOY"
+            android:textColor="#B9A7FF"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.20" />
 
         <TextView
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:gravity="center"
-            android:text="Tu asistente para tecnología, productos y soporte de Mi PC."
-            android:textColor="#92929E"
+            android:text="Tecnología, productos y soporte en un solo lugar."
+            android:textColor="#858592"
             android:textSize="14sp" />
     </LinearLayout>
 
@@ -163,7 +170,6 @@
             app:cardElevation="0dp"
             app:strokeColor="#363640"
             app:strokeWidth="1dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -171,64 +177,13 @@
                 android:orientation="horizontal"
                 android:paddingStart="6dp"
                 android:paddingEnd="6dp">
-
-                <ImageButton
-                    android:id="@+id/btn_call"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/bg_action_button"
-                    android:contentDescription="Llamar"
-                    android:src="@drawable/ic_call"
-                    android:padding="11dp" />
-
-                <ImageButton
-                    android:id="@+id/btn_attach"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_action_button"
-                    android:contentDescription="Adjuntar archivo"
-                    android:src="@drawable/ic_attach"
-                    android:padding="11dp" />
-
-                <EditText
-                    android:id="@+id/user_input"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:enabled="false"
-                    android:gravity="center_vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="8dp"
-                    android:singleLine="true"
-                    android:textColor="#FFFFFF"
-                    android:textColorHint="#777783"
-                    android:textSize="15sp"
-                    android:hint="Escribile a Mi PC..." />
-
-                <ImageButton
-                    android:id="@+id/btn_mic"
-                    android:layout_width="44dp"
-                    android:layout_height="44dp"
-                    android:background="@drawable/bg_action_button"
-                    android:contentDescription="Grabar audio"
-                    android:src="@drawable/ic_mic"
-                    android:padding="11dp" />
+                <ImageButton android:id="@+id/btn_call" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginEnd="4dp" android:background="@drawable/bg_action_button" android:contentDescription="Llamar" android:src="@drawable/ic_call" android:padding="11dp" />
+                <ImageButton android:id="@+id/btn_attach" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_action_button" android:contentDescription="Adjuntar archivo" android:src="@drawable/ic_attach" android:padding="11dp" />
+                <EditText android:id="@+id/user_input" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@android:color/transparent" android:enabled="false" android:gravity="center_vertical" android:paddingStart="12dp" android:paddingEnd="8dp" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#777783" android:textSize="15sp" android:hint="Escribile a Mi PC..." />
+                <ImageButton android:id="@+id/btn_mic" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_action_button" android:contentDescription="Grabar audio" android:src="@drawable/ic_mic" android:padding="11dp" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:layout_marginStart="9dp"
-            android:contentDescription="Enviar mensaje"
-            android:enabled="true"
-            android:src="@drawable/ic_send"
-            app:backgroundTint="#8B6CFF"
-            app:fabSize="normal"
-            app:maxImageSize="22dp" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@+id/fab" android:layout_width="54dp" android:layout_height="54dp" android:layout_marginStart="9dp" android:contentDescription="Enviar mensaje" android:enabled="true" android:src="@drawable/ic_send" app:backgroundTint="#8B6CFF" app:fabSize="normal" app:maxImageSize="22dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -245,72 +200,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
-
-        <ImageButton
-            android:id="@+id/btn_close_menu"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_gravity="end"
-            android:background="@drawable/bg_action_button"
-            android:contentDescription="Cerrar menú"
-            android:src="@drawable/ic_close"
-            android:padding="10dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="MI PC"
-            android:textColor="#FFFFFF"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Tu asistente"
-            android:textColor="#92929E"
-            android:textSize="13sp" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="12dp"
-            android:background="#303039" />
-
-        <TextView
-            android:id="@+id/menu_new_chat"
-            style="@style/MenuItem"
-            android:drawableStart="@drawable/ic_menu_new_chat"
-            android:text="Nuevo chat" />
-
-        <TextView
-            android:id="@+id/menu_files"
-            style="@style/MenuItem"
-            android:drawableStart="@drawable/ic_menu_files"
-            android:text="Archivos" />
-
-        <TextView
-            android:id="@+id/menu_catalog"
-            style="@style/MenuItem"
-            android:drawableStart="@drawable/ic_menu_catalog"
-            android:text="Catálogo" />
-
-        <TextView
-            android:id="@+id/menu_history"
-            style="@style/MenuItem"
-            android:drawableStart="@drawable/ic_menu_history"
-            android:text="Historial" />
-
-        <TextView
-            android:id="@+id/menu_settings"
-            style="@style/MenuItem"
-            android:drawableStart="@drawable/ic_menu_settings"
-            android:text="Configuración" />
-
+        <ImageButton android:id="@+id/btn_close_menu" android:layout_width="44dp" android:layout_height="44dp" android:layout_gravity="end" android:background="@drawable/bg_action_button" android:contentDescription="Cerrar menú" android:src="@drawable/ic_close" android:padding="10dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="MI PC" android:textColor="#FFFFFF" android:textSize="26sp" android:textStyle="bold" android:letterSpacing="0.08" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Tu asistente" android:textColor="#92929E" android:textSize="13sp" />
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="24dp" android:layout_marginBottom="12dp" android:background="#303039" />
+        <TextView android:id="@+id/menu_new_chat" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_new_chat" android:text="Nuevo chat" />
+        <TextView android:id="@+id/menu_files" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_files" android:text="Archivos" />
+        <TextView android:id="@+id/menu_catalog" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_catalog" android:text="Catálogo" />
+        <TextView android:id="@+id/menu_history" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_history" android:text="Historial" />
+        <TextView android:id="@+id/menu_settings" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_settings" android:text="Configuración" />
     </LinearLayout>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
