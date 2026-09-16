@@ -16,25 +16,41 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <com.ivan.asistente.MiPcLogoView
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:contentDescription="Logo de Mi PC" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
             android:text="MI PC"
             android:textColor="#FFFFFF"
-            android:textSize="38sp"
+            android:textSize="34sp"
             android:textStyle="bold"
-            android:letterSpacing="0.14"
+            android:letterSpacing="0.16"
             android:gravity="center" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="8dp"
             android:text="EL FUTURO ES HOY"
-            android:textColor="#9A7BFF"
-            android:textSize="15sp"
+            android:textColor="#B9A7FF"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:letterSpacing="0.18"
+            android:letterSpacing="0.22"
+            android:gravity="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="Tecnología · Soporte · Soluciones"
+            android:textColor="#777783"
+            android:textSize="11sp"
+            android:letterSpacing="0.08"
             android:gravity="center" />
 
     </LinearLayout>
