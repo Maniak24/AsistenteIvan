@@ -54,8 +54,6 @@ class VoiceManager(private val context: Context) {
         if (tts == null) initialize()
         val engine = tts ?: return@withContext
 
-        // Dividir respuestas largas evita generar un bloque de audio enorme
-        // de una sola vez y permite que Daniela empiece a hablar antes.
         val chunks = text
             .replace("\n", " ")
             .split(Regex("(?<=[.!?])\\s+"))
@@ -74,7 +72,7 @@ class VoiceManager(private val context: Context) {
         }
     }
 
-    private fun playAudio(samples: FloatArray, sampleRate: Int) {
+    private suspend fun playAudio(samples: FloatArray, sampleRate: Int) {
         if (samples.isEmpty()) return
 
         val pcm = ShortArray(samples.size)
