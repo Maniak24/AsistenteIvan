@@ -15,6 +15,10 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.WindowManager
+import android.view.MotionEvent
+import android.media.ToneGenerator
+import android.media.AudioManager
+import android.view.inputmethod.InputMethodManager
 import android.util.Log
 import android.widget.EditText
 import android.widget.TextView
@@ -66,6 +70,17 @@ class MainActivity : AppCompatActivity() {
     private val messages = mutableListOf<Message>()
     private val lastAssistantMsg = StringBuilder()
     private val messageAdapter = MessageAdapter(messages)
+
+    private fun playMicStartSound() {
+        val tone = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 35)
+        tone.startTone(ToneGenerator.TONE_PROP_BEEP2, 80)
+        tone.release()
+    }
+
+    private fun hideKeyboardPreservingText() {
+        val imm = getSystemService(InputMethodManager::class.java)
+        imm.hideSoftInputFromWindow(userInputEt.windowToken, 0)
+    }
 
     private fun startConversationMode() {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
@@ -120,6 +135,7 @@ class MainActivity : AppCompatActivity() {
             speechRecognizer?.setRecognitionListener(object : RecognitionListener {
                 override fun onReadyForSpeech(params: android.os.Bundle?) {
                     isListening = true
+                    VoiceConversationActivity.setState("listening")
                 }
 
                 override fun onResults(results: android.os.Bundle?) {
@@ -133,6 +149,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (!spokenText.isNullOrEmpty() && conversationVoiceMode) {
                         conversationProcessing = true
+                        VoiceConversationActivity.setState("processing")
                         userInputEt.setText(spokenText)
                         userInputEt.setSelection(userInputEt.text.length)
 
@@ -196,6 +213,8 @@ class MainActivity : AppCompatActivity() {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
             return
         }
+
+        playMicStartSound()
 
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -266,7 +285,16 @@ class MainActivity : AppCompatActivity() {
             if (conversationVoiceMode) {
                 stopConversationMode()
             } else {
-                startConversationMode()
+                startActivityForResult(
+                    Intent(this, VoiceConversationActivity::class.java),
+                    3001
+                )
+
+                window.decorView.postDelayed({
+                    if (!isFinishing) {
+                        startConversationMode()
+                    }
+                }, 180)
             }
         }
 
@@ -453,6 +481,13 @@ class MainActivity : AppCompatActivity() {
         messagesRv.adapter = messageAdapter
         userInputEt = findViewById(R.id.user_input)
 
+        window.decorView.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN && currentFocus === userInputEt) {
+                hideKeyboardPreservingText()
+            }
+            false
+        }
+
         val btnMic = findViewById<View>(R.id.btn_mic)
         val btnCall = findViewById<View>(R.id.btn_call)
         val fab = findViewById<View>(R.id.fab)
@@ -469,7 +504,14 @@ class MainActivity : AppCompatActivity() {
 
             override fun afterTextChanged(s: Editable?) {}
         })
-        userActionFab = findViewById(R.id.fab)
+        messagesRv.setOnTouchListener { _, event ->
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            hideKeyboardPreservingText()
+        }
+        false
+    }
+
+    userActionFab = findViewById(R.id.fab)
 
         // Arm AI Chat initialization
         lifecycleScope.launch(Dispatchers.Default) {
@@ -534,7 +576,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // Ensure the model file is available
-                val modelName = metadata.filename() + FILE_EXTENSION_GGUF
+                val modelName = "gemma-3-1b-it-Q4_K_M.gguf"
                 contentResolver.openInputStream(uri)?.use { input ->
                     ensureModelFile(modelName, input)
                 }?.let { modelFile ->
@@ -723,6 +765,10 @@ class MainActivity : AppCompatActivity() {
 
                             if (responseText.isNotEmpty() && conversationVoiceMode) {
                                 try {
+                                    withContext(Dispatchers.Main) {
+                                        VoiceConversationActivity.setState("speaking")
+                                    }
+
                                     voiceManager.speak(responseText)
                                 } catch (e: Throwable) {
                                     Log.e(TAG, "Error al reproducir la respuesta de voz", e)
@@ -733,6 +779,7 @@ class MainActivity : AppCompatActivity() {
                                 conversationProcessing = false
 
                                 if (conversationVoiceMode) {
+                                    VoiceConversationActivity.setState("listening")
                                     startConversationListening()
                                 }
 
@@ -793,6 +840,15 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         generationJob?.cancel()
         super.onStop()
+    }
+
+    @Deprecated("Deprecated in Android API")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 3001) {
+            stopConversationMode()
+        }
     }
 
     override fun onDestroy() {
