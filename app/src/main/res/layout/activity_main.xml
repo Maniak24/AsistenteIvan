@@ -6,19 +6,20 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="#111116"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <!-- Encabezado -->
+    <!-- HEADER -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="18dp"
+        android:paddingTop="18dp"
+        android:paddingEnd="18dp"
         android:paddingBottom="14dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -26,42 +27,57 @@
 
         <ImageButton
             android:id="@+id/btn_menu"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@android:color/transparent"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:background="@drawable/bg_action_button"
             android:contentDescription="Abrir menú"
             android:src="@drawable/ic_menu"
-            android:padding="10dp" />
+            android:padding="12dp" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="MI PC"
-                android:textSize="24sp"
+                android:textSize="22sp"
                 android:textStyle="bold"
-                android:letterSpacing="0.12"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:letterSpacing="0.08"
+                android:textColor="#FFFFFF" />
 
-            <TextView
-                android:id="@+id/connection_status"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="●  Comprobando conexión..."
-                android:textSize="13sp"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:layout_marginTop="3dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_action_button" />
+
+                <TextView
+                    android:id="@+id/connection_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Comprobando conexión..."
+                    android:textSize="12sp"
+                    android:textColor="#A7A7B3" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Metadata del modelo, oculto visualmente -->
+    <!-- Metadata oculto -->
     <TextView
         android:id="@+id/gguf"
         android:layout_width="0dp"
@@ -72,15 +88,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Conversación -->
+    <!-- CHAT -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messages"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="12dp"
         android:clipToPadding="false"
         android:fadeScrollbars="false"
         android:scrollbars="vertical"
@@ -91,7 +109,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_message_assistant" />
 
-    <!-- Barra inferior -->
+    <!-- ZONA DE ESCRITURA -->
     <LinearLayout
         android:id="@+id/input_container"
         android:layout_width="0dp"
@@ -100,84 +118,99 @@
         android:gravity="center_vertical"
         android:paddingStart="12dp"
         android:paddingTop="8dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="10dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="14dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageButton
-            android:id="@+id/btn_call"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="2dp"
-            android:background="@drawable/bg_action_button"
-            android:contentDescription="Llamar"
-            android:src="@drawable/ic_call"
-            android:padding="12dp" />
-
-        <ImageButton
-            android:id="@+id/btn_mic"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="6dp"
-            android:background="@drawable/bg_action_button"
-            android:contentDescription="Grabar audio"
-            android:src="@drawable/ic_mic"
-            android:padding="12dp" />
-
-        <ImageButton
-            android:id="@+id/btn_attach"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="4dp"
-            android:background="@drawable/bg_action_button"
-            android:contentDescription="Adjuntar archivo"
-            android:src="@drawable/ic_attach"
-            android:padding="12dp" />
-
         <com.google.android.material.card.MaterialCardView
             android:layout_width="0dp"
-            android:layout_height="54dp"
+            android:layout_height="58dp"
             android:layout_weight="1"
-            app:cardCornerRadius="27dp"
+            app:cardBackgroundColor="#1C1C23"
+            app:cardCornerRadius="29dp"
             app:cardElevation="0dp"
+            app:strokeColor="#363640"
             app:strokeWidth="1dp">
 
-            <EditText
-                android:id="@+id/user_input"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/bg_input"
-                android:enabled="false"
                 android:gravity="center_vertical"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:singleLine="true"
-                android:textSize="16sp"
-                android:hint="Escribile a Mi PC..." />
+                android:orientation="horizontal"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp">
+
+                <ImageButton
+                    android:id="@+id/btn_call"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/bg_action_button"
+                    android:contentDescription="Llamar"
+                    android:src="@drawable/ic_call"
+                    android:padding="11dp" />
+
+                <ImageButton
+                    android:id="@+id/btn_attach"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_action_button"
+                    android:contentDescription="Adjuntar archivo"
+                    android:src="@drawable/ic_attach"
+                    android:padding="11dp" />
+
+                <EditText
+                    android:id="@+id/user_input"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@android:color/transparent"
+                    android:enabled="false"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="8dp"
+                    android:singleLine="true"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#777783"
+                    android:textSize="15sp"
+                    android:hint="Escribile a Mi PC..." />
+
+                <ImageButton
+                    android:id="@+id/btn_mic"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_action_button"
+                    android:contentDescription="Grabar audio"
+                    android:src="@drawable/ic_mic"
+                    android:padding="11dp" />
+
+            </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:layout_marginStart="9dp"
             android:contentDescription="Enviar mensaje"
             android:enabled="true"
             android:src="@drawable/ic_send"
-            app:fabSize="normal" />
+            app:backgroundTint="#8B6CFF"
+            app:fabSize="normal"
+            app:maxImageSize="22dp" />
 
     </LinearLayout>
 
-
+    <!-- MENÚ LATERAL -->
     <LinearLayout
         android:id="@+id/side_menu"
         android:layout_width="300dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingTop="64dp"
+        android:paddingTop="72dp"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:background="@drawable/bg_side_menu"
@@ -192,7 +225,7 @@
             android:layout_width="44dp"
             android:layout_height="44dp"
             android:layout_gravity="end"
-            android:background="@android:color/transparent"
+            android:background="@drawable/bg_action_button"
             android:contentDescription="Cerrar menú"
             android:src="@drawable/ic_close"
             android:padding="10dp" />
@@ -200,9 +233,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:text="MI PC"
             android:textColor="#FFFFFF"
-            android:textSize="24sp"
+            android:textSize="26sp"
             android:textStyle="bold"
             android:letterSpacing="0.08" />
 
@@ -210,8 +244,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Asistente inteligente"
-            android:textColor="#8E8E99"
+            android:text="Tu asistente"
+            android:textColor="#92929E"
             android:textSize="13sp" />
 
         <View
@@ -267,4 +301,5 @@
             android:textSize="16sp" />
 
     </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
