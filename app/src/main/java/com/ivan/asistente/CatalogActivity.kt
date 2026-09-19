@@ -15,7 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONArray
 import org.json.JSONObject
 
-private data class CatalogProduct(
+data class CatalogProduct(
     val id: Long,
     var name: String,
     var category: String,
