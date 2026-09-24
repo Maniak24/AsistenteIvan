@@ -1,14 +1,34 @@
 plugins {
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.0"
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
 
 android {
-    namespace = "com.ivan.asistente"
+    buildFeatures {
+        buildConfig = true
+    }
+
+
+    namespace = "com.coloniavictoria.municipal"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.ivan.asistente"
+        val supabaseUrl = project.findProperty("SUPABASE_URL")
+            ?: java.util.Properties().let {
+                file("../local.properties").inputStream().use { stream -> it.load(stream) }
+                it.getProperty("SUPABASE_URL", "")
+            }
+
+        val supabaseKey = java.util.Properties().let {
+            file("../local.properties").inputStream().use { stream -> it.load(stream) }
+            it.getProperty("SUPABASE_PUBLISHABLE_KEY", "")
+        }
+
+        buildConfigField("String", "SUPABASE_URL", ""$supabaseUrl"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", ""$supabaseKey"")
+
+        applicationId = "com.coloniavictoria.municipal"
 
         minSdk = 33
         targetSdk = 36
@@ -46,7 +66,11 @@ android {
     }
 }
 
-dependencies {implementation(files("libs/sherpa-onnx-1.13.8.aar"))
+dependencies {
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.8.0"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.ktor:ktor-client-android:3.0.3")
+implementation(files("libs/sherpa-onnx-1.13.8.aar"))
     implementation(libs.bundles.androidx)
     implementation(libs.material)
 

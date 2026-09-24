@@ -16,7 +16,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <com.ivan.asistente.MiPcLogoView
+        <com.coloniavictoria.municipal.MiPcLogoView
             android:layout_width="112dp"
             android:layout_height="112dp"
             android:contentDescription="Logo de Mi PC" />

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F6F8">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Panel municipal"
+            android:textColor="#1B5E20"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtResumen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#FFFFFF"
+            android:padding="18dp"
+            android:textColor="#333333"
+            android:textSize="17sp" />
+
+        <Button
+            android:id="@+id/btnGestionReclamos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="GESTIONAR RECLAMOS" />
+
+        <Button
+            android:id="@+id/btnGestionNoticias"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GESTIONAR NOTICIAS Y AVISOS" />
+
+        <Button
+            android:id="@+id/btnGestionObras"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GESTIONAR OBRAS" />
+
+        <Button
+            android:id="@+id/btnGestionTramites"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GESTIONAR TRÁMITES" />
+
+    </LinearLayout>
+
+</ScrollView>

@@ -1,213 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#111116"
-    android:fitsSystemWindows="true"
-    tools:context=".MainActivity">
+    android:background="#F5F6F8">
 
     <LinearLayout
-        android:id="@+id/header"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="18dp"
-        android:paddingTop="18dp"
-        android:paddingEnd="18dp"
-        android:paddingBottom="14dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <ImageButton
-            android:id="@+id/btn_menu"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
-            android:background="@drawable/bg_action_button"
-            android:contentDescription="Abrir menú"
-            android:src="@drawable/ic_menu"
-            android:padding="12dp" />
+        
+        <TextView
+            android:id="@+id/btnPanelMunicipal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="#1B5E20"
+            android:gravity="center"
+            android:padding="18dp"
+            android:text="PANEL MUNICIPAL"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+<TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Colonia Victoria"
+            android:textColor="#1B5E20"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Servicios municipales"
+            android:textColor="#555555"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/btnReclamo"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="24dp"
+            android:background="#1B5E20"
+            android:gravity="center"
+            android:text="HACER UN RECLAMO"
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="Servicios"
+            android:textColor="#222222"
+            android:textSize="21sp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="14dp"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="MI PC"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"
-                android:textColor="#FFFFFF" />
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <View
-                    android:layout_width="7dp"
-                    android:layout_height="7dp"
-                    android:layout_marginEnd="6dp"
-                    android:background="@drawable/bg_action_button" />
-                <TextView
-                    android:id="@+id/connection_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Comprobando conexión..."
-                    android:textSize="12sp"
-                    android:textColor="#A7A7B3" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/gguf"
-        android:layout_width="0dp"
-        android:layout_height="1dp"
-        android:visibility="gone"
-        android:text="Selected GGUF model's metadata will show here."
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <LinearLayout
-        android:id="@+id/intro_panel"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:paddingBottom="48dp"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintBottom_toTopOf="@id/input_container"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.ivan.asistente.MiPcLogoView
-            android:layout_width="94dp"
-            android:layout_height="94dp"
-            android:contentDescription="Logo animado de Mi PC" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="MI PC"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.12" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="7dp"
-            android:text="EL FUTURO ES HOY"
-            android:textColor="#B9A7FF"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.20" />
-
-        <TextView
-            android:layout_width="300dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:gravity="center"
-            android:text="Tecnología, productos y soporte en un solo lugar."
-            android:textColor="#858592"
-            android:textSize="14sp" />
-    </LinearLayout>
+            android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/messages"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="12dp"
-        android:clipToPadding="false"
-        android:fadeScrollbars="false"
-        android:scrollbars="vertical"
-        android:background="#111116"
-        app:reverseLayout="false"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintBottom_toTopOf="@id/input_container"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_message_assistant" />
-
-    <LinearLayout
-        android:id="@+id/input_container"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="14dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="0dp"
-            android:layout_height="58dp"
-            android:layout_weight="1"
-            app:cardBackgroundColor="#1C1C23"
-            app:cardCornerRadius="29dp"
-            app:cardElevation="0dp"
-            app:strokeColor="#363640"
-            app:strokeWidth="1dp">
-            <LinearLayout
+            <TextView
+                android:id="@+id/btnNoticias"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="72dp"
+                android:layout_marginBottom="10dp"
+                android:background="#FFFFFF"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp">
-                <ImageButton android:id="@+id/btn_call" android:layout_width="44dp" android:layout_height="44dp" android:layout_marginEnd="4dp" android:background="@drawable/bg_action_button" android:contentDescription="Llamar" android:src="@drawable/ic_call" android:padding="11dp" />
-                <ImageButton android:id="@+id/btn_attach" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_action_button" android:contentDescription="Adjuntar archivo" android:src="@drawable/ic_attach" android:padding="11dp" />
-                <EditText android:id="@+id/user_input" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:background="@android:color/transparent" android:enabled="false" android:gravity="center_vertical" android:paddingStart="12dp" android:paddingEnd="8dp" android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#777783" android:textSize="15sp" android:hint="Escribile a Mi PC..." />
-                <ImageButton android:id="@+id/btn_mic" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/bg_action_button" android:contentDescription="Grabar audio" android:src="@drawable/ic_mic" android:padding="11dp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-        <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@+id/fab" android:layout_width="54dp" android:layout_height="54dp" android:layout_marginStart="9dp" android:contentDescription="Enviar mensaje" android:enabled="true" android:src="@drawable/ic_send" app:backgroundTint="#8B6CFF" app:fabSize="normal" app:maxImageSize="22dp" />
+                android:padding="20dp"
+                android:text="📰  Noticias y avisos"
+                android:textColor="#222222"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/btnObras"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_marginBottom="10dp"
+                android:background="#FFFFFF"
+                android:gravity="center_vertical"
+                android:padding="20dp"
+                android:text="🏗  Obras municipales"
+                android:textColor="#222222"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/btnMapa"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:layout_marginBottom="10dp"
+                android:background="#FFFFFF"
+                android:gravity="center_vertical"
+                android:padding="20dp"
+                android:text="📍  Mapa de reclamos"
+                android:textColor="#222222"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/btnTramites"
+                android:layout_width="match_parent"
+                android:layout_height="72dp"
+                android:background="#FFFFFF"
+                android:gravity="center_vertical"
+                android:padding="20dp"
+                android:text="📅  Turnos y trámites"
+                android:textColor="#222222"
+                android:textSize="17sp" />
+
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/btnMisReclamos"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="10dp"
+            android:background="#FFFFFF"
+            android:gravity="center_vertical"
+            android:padding="20dp"
+            android:text="Mis reclamos"
+            android:textColor="#222222"
+            android:textSize="17sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:text="Colonia Victoria informa"
+            android:textColor="#222222"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Información oficial, servicios y novedades de la localidad."
+            android:textColor="#666666"
+            android:textSize="15sp" />
+
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/side_menu"
-        android:layout_width="300dp"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingTop="72dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:background="@drawable/bg_side_menu"
-        android:elevation="20dp"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
-        <ImageButton android:id="@+id/btn_close_menu" android:layout_width="44dp" android:layout_height="44dp" android:layout_gravity="end" android:background="@drawable/bg_action_button" android:contentDescription="Cerrar menú" android:src="@drawable/ic_close" android:padding="10dp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="MI PC" android:textColor="#FFFFFF" android:textSize="26sp" android:textStyle="bold" android:letterSpacing="0.08" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Tu asistente" android:textColor="#92929E" android:textSize="13sp" />
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="24dp" android:layout_marginBottom="12dp" android:background="#303039" />
-        <TextView android:id="@+id/menu_new_chat" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_new_chat" android:text="Nuevo chat" />
-        <TextView android:id="@+id/menu_files" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_files" android:text="Archivos" />
-        <TextView android:id="@+id/menu_catalog" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_catalog" android:text="Catálogo" />
-        <TextView android:id="@+id/menu_history" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_history" android:text="Historial" />
-        <TextView android:id="@+id/menu_settings" style="@style/MenuItem" android:drawableStart="@drawable/ic_menu_settings" android:text="Configuración" />
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

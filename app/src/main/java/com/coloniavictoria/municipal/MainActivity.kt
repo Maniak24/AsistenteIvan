@@ -1,4 +1,4 @@
-package com.ivan.asistente
+package com.coloniavictoria.municipal
 
 import android.net.Uri
 import android.app.AlertDialog
@@ -9,6 +9,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.os.Bundle
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.text.Editable
@@ -178,9 +179,81 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            androidx.core.app.ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                300
+            )
+        }
+
         super.onCreate(savedInstanceState)
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         setContentView(R.layout.activity_main)
+
+        
+        
+        
+        
+        
+        findViewById<android.widget.TextView>(R.id.btnTramites).setOnClickListener {
+            startActivity(Intent(this, TramitesActivity::class.java))
+        }
+
+        findViewById<android.widget.TextView>(R.id.btnMapa).setOnClickListener {
+            startActivity(Intent(this, MapaReclamosActivity::class.java))
+        }
+
+        findViewById<android.widget.TextView>(R.id.btnObras).setOnClickListener {
+            startActivity(Intent(this, ObrasActivity::class.java))
+        }
+
+        findViewById<android.widget.TextView>(R.id.btnNoticias).setOnClickListener {
+            startActivity(Intent(this, NoticiasActivity::class.java))
+        }
+
+        findViewById<android.widget.TextView>(R.id.btnMisReclamos).setOnClickListener {
+            startActivity(Intent(this, MisReclamosActivity::class.java))
+        }
+
+        
+        findViewById<android.widget.TextView>(R.id.btnInformacion).setOnClickListener {
+            startActivity(Intent(this, InformacionActivity::class.java))
+        }
+
+        findViewById<android.widget.TextView>(R.id.btnPanelMunicipal).setOnClickListener {
+            val entrada = android.widget.EditText(this).apply {
+                inputType = android.text.InputType.TYPE_CLASS_NUMBER or
+                        android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
+                hint = "PIN"
+            }
+
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Acceso municipal")
+                .setMessage("Ingresá el PIN para continuar")
+                .setView(entrada)
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Ingresar") { _, _ ->
+                    if (entrada.text.toString() == "2468") {
+                        startActivity(Intent(this, PanelMunicipalActivity::class.java))
+                    } else {
+                        android.widget.Toast.makeText(
+                            this,
+                            "PIN incorrecto",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                .show()
+        }
+
+        findViewById<android.widget.TextView>(R.id.btnReclamo).setOnClickListener {
+            startActivity(Intent(this, ReclamoActivity::class.java))
+        }
         catalogRepository = CatalogRepository(applicationContext)
 
         findViewById<View>(R.id.btn_mic).setOnClickListener { startVoiceInput() }
