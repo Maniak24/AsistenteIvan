@@ -14,29 +14,47 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        val supabaseUrl = project.findProperty("SUPABASE_URL")
-            ?: java.util.Properties().let {
-                file("../local.properties").inputStream().use { stream -> it.load(stream) }
-                it.getProperty("SUPABASE_URL", "")
+        fun configValue(name: String): String {
+            val localProperties = rootProject.file("local.properties")
+
+            val localValue = if (localProperties.exists()) {
+                java.util.Properties().apply {
+                    localProperties.inputStream().use { load(it) }
+                }.getProperty(name)
+            } else {
+                null
             }
 
-        val supabaseKey = java.util.Properties().let {
-            file("../local.properties").inputStream().use { stream -> it.load(stream) }
-            it.getProperty("SUPABASE_PUBLISHABLE_KEY", "")
+            return project.findProperty(name)?.toString()
+                ?: System.getenv(name)
+                ?: localValue
+                ?: ""
         }
 
-        buildConfigField("String", "SUPABASE_URL", ""$supabaseUrl"")
-        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", ""$supabaseKey"")
+        fun buildConfigString(value: String): String =
+            "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+
+        val supabaseUrl = configValue("SUPABASE_URL")
+        val supabaseKey = configValue("SUPABASE_PUBLISHABLE_KEY")
+
+        buildConfigField(
+            "String",
+            "SUPABASE_URL",
+            buildConfigString(supabaseUrl)
+        )
+        buildConfigField(
+            "String",
+            "SUPABASE_PUBLISHABLE_KEY",
+            buildConfigString(supabaseKey)
+        )
 
         applicationId = "com.coloniavictoria.municipal"
-
         minSdk = 33
         targetSdk = 36
-
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
         vectorDrawables {
             useSupportLibrary = true
         }
