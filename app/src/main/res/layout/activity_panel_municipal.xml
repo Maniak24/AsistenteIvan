@@ -28,6 +28,13 @@
             android:textColor="#333333"
             android:textSize="17sp" />
 
+        <LinearLayout
+            android:id="@+id/listaMunicipal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp" />
+
         <Button
             android:id="@+id/btnGestionReclamos"
             android:layout_width="match_parent"

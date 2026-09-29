@@ -1,11 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.3.0"
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}
+
 android {
-    namespace = "com.coloniavictoria.municipal"
+    namespace = "com.ivan.mipc2"
     compileSdk = 36
 
     buildFeatures {
@@ -13,13 +22,19 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.coloniavictoria.municipal"
+        applicationId = "com.ivan.mipc2"
         minSdk = 33
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${localProperties.getProperty("geminiApiKey", "")}\""
+        )
 
         vectorDrawables {
             useSupportLibrary = true
@@ -28,8 +43,8 @@ android {
 
     buildTypes {
         debug {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android.txt"),
                 "proguard-rules.pro"

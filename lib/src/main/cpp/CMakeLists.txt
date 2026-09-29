@@ -1,6 +1,30 @@
-cmake_minimum_required(VERSION 3.31.6)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -B/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/33 -L/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/33 -L/data/data/com.termux/files/usr/lib/clang/21/lib/linux/aarch64")
+cmake_minimum_required(VERSION 3.31)
+
+
+# Toolchain ARM64 Termux + NDK
+set(NDK_BASE "/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64")
+
+# CMake/NDK debe encontrar libc++_shared durante la prueba del compilador
+
+set(CMAKE_EXE_LINKER_FLAGS_INIT
+    "-L${NDK_BASE}/sysroot/usr/lib/aarch64-linux-android/33 -L${NDK_BASE}/sysroot/usr/lib/aarch64-linux-android -L/data/data/com.termux/files/usr/lib/clang/21/lib/linux/aarch64"
+)
+
+set(CMAKE_SHARED_LINKER_FLAGS_INIT
+    "-L${NDK_BASE}/sysroot/usr/lib/aarch64-linux-android/33 -L${NDK_BASE}/sysroot/usr/lib/aarch64-linux-android -L/data/data/com.termux/files/usr/lib/clang/21/lib/linux/aarch64"
+)
 
 project("ai-chat" VERSION 1.0.0 LANGUAGES C CXX)
+
+# Runtime ARM64 de Clang 21 + bibliotecas Termux
+add_link_options(
+    "-L/data/data/com.termux/files/usr/lib"
+    "-L/data/data/com.termux/files/usr/lib/clang/21/lib/linux"
+    "/data/data/com.termux/files/usr/lib/clang/21/lib/linux/libclang_rt.builtins-aarch64-android.a"
+    "/data/data/com.termux/files/usr/lib/libunwind.a"
+)
+
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED true)
@@ -54,3 +78,17 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         llama-common
         android
         log)
+
+set(CMAKE_C_COMPILER "/data/data/com.termux/files/usr/bin/clang" CACHE FILEPATH "" FORCE)
+set(CMAKE_CXX_COMPILER "/data/data/com.termux/files/usr/bin/clang++" CACHE FILEPATH "" FORCE)
+set(CMAKE_C_FLAGS "--target=aarch64-linux-android33 --sysroot=/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "--target=aarch64-linux-android33 --sysroot=/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot" CACHE STRING "" FORCE)
+
+# Rutas necesarias para el toolchain ARM64 de Termux + NDK
+set(NDK_BASE "/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64")
+
+link_directories(
+    "${NDK_BASE}/sysroot/usr/lib/aarch64-linux-android"
+    "${NDK_BASE}/sysroot/usr/lib/aarch64-linux-android/33"
+    "/data/data/com.termux/files/usr/lib/clang/21/lib/linux/aarch64"
+)

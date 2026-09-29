@@ -16,11 +16,21 @@ android {
         consumerProguardFiles("consumer-rules.pro")
 
         ndk {
-             abiFilters += listOf("arm64-v8a", "x86_64")
+             abiFilters += listOf("arm64-v8a")
         }
         externalNativeBuild {
             cmake {
                 arguments += "-DCMAKE_BUILD_TYPE=Release"
+                arguments += "-DANDROID_STL=c++_shared"
+                arguments += "-DCMAKE_HAVE_LIBC_PTHREAD=1"
+                arguments += "-DCMAKE_THREAD_LIBS_INIT=pthread"
+                arguments += "-DCMAKE_USE_PTHREADS_INIT=1"
+                arguments += "-DCMAKE_C_COMPILER=/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/bin/clang"
+                arguments += "-DCMAKE_CXX_COMPILER=/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++"
+                arguments += "-DCMAKE_C_COMPILER_TARGET=aarch64-none-linux-android33"
+                arguments += "-DCMAKE_CXX_COMPILER_TARGET=aarch64-none-linux-android33"
+                arguments += "-DCMAKE_EXE_LINKER_FLAGS=-L/data/data/com.termux/files/usr/lib -L/data/data/com.termux/files/usr/lib/clang/21/lib/linux/aarch64 -L/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/33 -L/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android "
+                arguments += "-DCMAKE_SHARED_LINKER_FLAGS=-L/data/data/com.termux/files/usr/lib -L/data/data/com.termux/files/usr/lib/clang/21/lib/linux/aarch64 -L/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/33 -L/data/data/com.termux/files/usr/var/lib/proot-distro/containers/debian/rootfs/root/android-sdk/ndk/29.0.13113456/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android "
                 arguments += "-DCMAKE_MESSAGE_LOG_LEVEL=DEBUG"
                 arguments += "-DCMAKE_VERBOSE_MAKEFILE=ON"
 
@@ -42,7 +52,7 @@ android {
     externalNativeBuild {
         cmake {
             path("src/main/cpp/CMakeLists.txt")
-            version = "3.31.6"
+            version = "4.3.4"
         }
     }
     compileOptions {
