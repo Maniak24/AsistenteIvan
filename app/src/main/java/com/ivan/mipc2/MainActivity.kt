@@ -313,7 +313,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         userInputEt = findViewById(R.id.user_input)
-        window.decorView.setOnTouchListener { _, event -> if (event.action == MotionEvent.ACTION_DOWN && currentFocus === userInputEt) hideKeyboardPreservingText(); false }
         val btnMic = findViewById<View>(R.id.btn_mic)
         val btnCall = findViewById<View>(R.id.btn_call)
         userInputEt.addTextChangedListener(object : TextWatcher {
@@ -404,7 +403,7 @@ class MainActivity : AppCompatActivity() {
                     - Priorizá respuestas breves y prácticas.
 
                     CONTEXTO DEL CATÁLOGO:
-                    $catalogContext
+                    ${catalogContext.text}
 
                     MENSAJE DEL USUARIO:
                     $userMsg

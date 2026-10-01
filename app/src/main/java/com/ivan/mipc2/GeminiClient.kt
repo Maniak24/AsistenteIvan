@@ -10,9 +10,9 @@ import java.net.URL
 object GeminiClient {
 
     private val models = listOf(
-        "gemini-3.6-flash",
-        "gemini-3.5-flash",
-        "gemini-3.1-flash-lite"
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash"
     )
 
     suspend fun ask(prompt: String): String = withContext(Dispatchers.IO) {
@@ -76,7 +76,6 @@ object GeminiClient {
                 .put(
                     "generationConfig",
                     JSONObject()
-                        .put("temperature", 0.7)
                         .put("maxOutputTokens", 2048)
                 )
                 .toString()
