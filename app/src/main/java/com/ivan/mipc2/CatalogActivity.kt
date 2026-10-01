@@ -396,9 +396,13 @@ class CatalogActivity : AppCompatActivity() {
     }
 
     private fun showPasteDialog() {
-        val input = EditText(this).apply { hint = "Producto;Categoría;Marca;Precio;Stock;Descripción;Promoción
-
-También podés importar directamente un archivo Excel .xlsx."; setTextColor(-1); setHintTextColor(0xff777783.toInt()); minLines = 8; gravity = Gravity.TOP }
+        val input = EditText(this).apply {
+            hint = "Producto;Categoría;Marca;Precio;Stock;Descripción;Promoción"
+            setTextColor(-1)
+            setHintTextColor(0xff777783.toInt())
+            minLines = 8
+            gravity = Gravity.TOP
+        }
         AlertDialog.Builder(this).setTitle("Pegar lista").setView(input).setNegativeButton("Cancelar", null).setPositiveButton("Importar") { _, _ ->
             val added = importRows(parseDelimited(input.text.toString())); afterImport(added)
         }.show()
