@@ -8,10 +8,16 @@ plugins {
 
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
-    if (file.exists()) {
-        file.inputStream().use { load(it) }
-    }
+    if (file.exists()) file.inputStream().use { load(it) }
 }
+
+val geminiApiKey = System.getenv("GEMINI_API_KEY")
+    ?.takeIf { it.isNotBlank() }
+    ?: localProperties.getProperty("geminiApiKey", "")
+
+val escapedGeminiApiKey = geminiApiKey
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
 
 android {
     namespace = "com.ivan.mipc2"
@@ -33,7 +39,7 @@ android {
         buildConfigField(
             "String",
             "GEMINI_API_KEY",
-            "\"${localProperties.getProperty("geminiApiKey", "")}\""
+            "\"$escapedGeminiApiKey\""
         )
 
         vectorDrawables {
@@ -69,12 +75,9 @@ android {
 
 dependencies {
     implementation(files("libs/sherpa-onnx-1.13.8.aar"))
-
     implementation(libs.bundles.androidx)
     implementation(libs.material)
-
     implementation(project(":lib"))
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
