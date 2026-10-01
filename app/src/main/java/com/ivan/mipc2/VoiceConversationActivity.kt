@@ -31,6 +31,8 @@ class VoiceConversationActivity : AppCompatActivity() {
     private lateinit var orb: View
     private lateinit var glow: View
     private lateinit var state: TextView
+    private lateinit var transcript: TextView
+    private var liveClient: GeminiLiveClient? = null
     private var animation: ValueAnimator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +44,7 @@ class VoiceConversationActivity : AppCompatActivity() {
         orb = findViewById(R.id.voice_orb)
         glow = findViewById(R.id.voice_orb_glow)
         state = findViewById(R.id.voice_state)
+        transcript = findViewById(R.id.voice_transcript)
 
         findViewById<ImageButton>(R.id.voice_close).setOnClickListener {
             closeConversation()
@@ -54,6 +57,7 @@ class VoiceConversationActivity : AppCompatActivity() {
         })
 
         playCallStartSound()
+        startLiveConversation()
         setListening()
     }
 
@@ -130,9 +134,46 @@ class VoiceConversationActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        liveClient?.close()
+        liveClient = null
+        super.onDestroy()
+    }
+
+    /* {
         animation?.cancel()
         animation = null
         if (instance === this) instance = null
         super.onDestroy()
     }
+    private fun startLiveConversation() {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+
+        liveClient = GeminiLiveClient(
+            apiKey = apiKey,
+            onUserTranscript = { text ->
+                runOnUiThread {
+                    transcript.text = "Vos: $text"
+                }
+            },
+            onAssistantTranscript = { text ->
+                runOnUiThread {
+                    transcript.text = "Mi PC: $text"
+                }
+            },
+            onState = { text ->
+                runOnUiThread {
+                    state.text = text
+                }
+            },
+            onError = { error ->
+                runOnUiThread {
+                    state.text = "Error de voz"
+                    transcript.text = error
+                }
+            }
+        )
+
+        liveClient?.start()
+    }
+
 }

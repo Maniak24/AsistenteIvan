@@ -20,6 +20,10 @@ val escapedGeminiApiKey = geminiApiKey
     .replace("\"", "\\\"")
 
 android {
+    buildFeatures {
+        buildConfig = true
+    }
+
     namespace = "com.ivan.mipc2"
     compileSdk = 36
 
@@ -74,6 +78,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.okhttp)
     implementation(files("libs/sherpa-onnx-1.13.8.aar"))
     implementation(libs.bundles.androidx)
     implementation(libs.material)

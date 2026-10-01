@@ -69,7 +69,10 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(userInputEt.windowToken, 0)
     }
 
-    private fun startConversationMode() {
+    private fun startActivityForResult(
+                                    Intent(this, VoiceConversationActivity::class.java),
+                                    3001
+                                ) {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
             Toast.makeText(this, "El reconocimiento de voz no está disponible.", Toast.LENGTH_SHORT).show()
             return
@@ -150,7 +153,12 @@ class MainActivity : AppCompatActivity() {
                 override fun onReadyForSpeech(params: Bundle?) { isListening = true }
                 override fun onResults(results: Bundle?) {
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let {
-                        userInputEt.setText(it); userInputEt.setSelection(userInputEt.text.length)
+                        userInputEt.setText(it)
+                            if (isModelReady && it.isNotBlank()) {
+                                handleUserInput()
+                            }
+                        userInputEt.setSelection(userInputEt.text.length)
+                        if (isModelReady) handleUserInput()
                     }
                     isListening = false
                 }
@@ -252,9 +260,10 @@ class MainActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.btn_mic).setOnClickListener { startVoiceInput() }
         findViewById<View>(R.id.btn_call).setOnClickListener {
-            if (conversationVoiceMode) stopConversationMode() else {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
+            } else {
                 startActivityForResult(Intent(this, VoiceConversationActivity::class.java), 3001)
-                window.decorView.postDelayed({ if (!isFinishing) startConversationMode() }, 180)
             }
         }
 
@@ -484,7 +493,8 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == 3001) {
-            stopConversationMode()
+            conversationVoiceMode = false
+            conversationProcessing = false
             return
         }
 
