@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -17,17 +20,25 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools platforms;android-36 build-tools;35.0.1 ndk;29.0.13113456'
+          packages: "platform-tools platforms;android-36 build-tools;35.0.1 ndk;29.0.13113456"
 
       - name: CMake
         uses: lukka/get-cmake@latest
         with:
           cmakeVersion: 3.31.6
+
+      - name: Verificar Gemini
+        run: |
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::Falta GEMINI_API_KEY en GitHub Actions."
+            exit 1
+          fi
+          echo "Clave Gemini disponible."
 
       - name: Permisos Gradle
         run: chmod +x gradlew
@@ -38,10 +49,16 @@ jobs:
           validate-wrappers: false
 
       - name: Compilar
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Verificar APK
+        run: |
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
+          sha256sum app/build/outputs/apk/debug/app-debug.apk
 
       - name: Guardar APK
         uses: actions/upload-artifact@v5
         with:
           name: Asistente-Ivan-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug/app-debug.apk

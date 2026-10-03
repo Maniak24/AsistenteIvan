@@ -299,6 +299,16 @@ class MainActivity : AppCompatActivity() {
         messagesRv = findViewById(R.id.messages)
         messagesRv.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = false }
         messagesRv.adapter = messageAdapter
+
+        messages.add(
+            Message(
+                id = UUID.randomUUID().toString(),
+                content = "Hola 👋 Soy Mi PC.\n\nPuedo ayudarte con preguntas, archivos, catálogo, soporte técnico y tareas del día a día.\n\nEscribime abajo para comenzar.",
+                isUser = false
+            )
+        )
+        messageAdapter.notifyItemInserted(0)
+
         userInputEt = findViewById(R.id.user_input)
         window.decorView.setOnTouchListener { _, event -> if (event.action == MotionEvent.ACTION_DOWN && currentFocus === userInputEt) hideKeyboardPreservingText(); false }
         val btnMic = findViewById<View>(R.id.btn_mic)
@@ -311,7 +321,43 @@ class MainActivity : AppCompatActivity() {
         messagesRv.setOnTouchListener { _, event -> if (event.action == MotionEvent.ACTION_DOWN) hideKeyboardPreservingText(); false }
         userActionFab = findViewById(R.id.fab)
         iniciarMotorIADeFormaSegura()
-        userActionFab.setOnClickListener { if (isModelReady) handleUserInput() }
+        userActionFab.setOnClickListener {
+            if (isModelReady) handleUserInput()
+        }
+
+        userInputEt.setOnEditorActionListener { _, actionId, event ->
+            val enter = actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND ||
+                    (event?.keyCode == android.view.KeyEvent.KEYCODE_ENTER &&
+                            event.action == android.view.KeyEvent.ACTION_DOWN)
+
+            if (enter && !userInputEt.text.isNullOrBlank()) {
+                if (isModelReady) handleUserInput()
+                true
+            } else false
+        }
+
+        findViewById<View>(R.id.card_ai).setOnClickListener {
+            userInputEt.setText("¿Qué podés hacer?")
+            userInputEt.requestFocus()
+            userInputEt.setSelection(userInputEt.text.length)
+        }
+
+        findViewById<View>(R.id.card_catalog).setOnClickListener {
+            startActivity(Intent(this, CatalogActivity::class.java))
+        }
+
+        findViewById<View>(R.id.card_files).setOnClickListener {
+            startActivityForResult(
+                Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "*/*"
+                }, 1001
+            )
+        }
+
+        findViewById<View>(R.id.card_voice).setOnClickListener {
+            startVoiceInput()
+        }
     }
 
 
@@ -399,7 +445,7 @@ class MainActivity : AppCompatActivity() {
 
                 messages[assistantIndex] = Message(
                     id = messages[assistantIndex].id,
-                    content = "No pude conectarme con la IA. Revisá tu conexión a internet.",
+                    content = "⚠️ No pude responder.\n\n${e.message ?: "Error desconocido de conexión con Gemini"}.\n\nRevisá internet y la configuración de la IA.",
                     isUser = false
                 )
                 messageAdapter.notifyItemChanged(assistantIndex)
