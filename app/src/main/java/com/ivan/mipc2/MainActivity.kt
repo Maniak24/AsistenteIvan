@@ -297,7 +297,7 @@ class MainActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback { Log.w(TAG, "Ignore back press for simplicity") }
         ggufTv = findViewById(R.id.gguf)
         messagesRv = findViewById(R.id.messages)
-        messagesRv.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = false }
+        messagesRv.layoutManager = LinearLayoutManager(this).apply { stackFromEnd = true }
         messagesRv.adapter = messageAdapter
 
         messages.add(
@@ -308,6 +308,9 @@ class MainActivity : AppCompatActivity() {
             )
         )
         messageAdapter.notifyItemInserted(0)
+        messagesRv.post {
+            messagesRv.scrollToPosition(messages.lastIndex)
+        }
 
         userInputEt = findViewById(R.id.user_input)
         window.decorView.setOnTouchListener { _, event -> if (event.action == MotionEvent.ACTION_DOWN && currentFocus === userInputEt) hideKeyboardPreservingText(); false }
@@ -318,7 +321,23 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { val writing = !s.isNullOrBlank(); btnMic.visibility = if (writing) View.GONE else View.VISIBLE; btnCall.visibility = if (writing) View.GONE else View.VISIBLE }
             override fun afterTextChanged(s: Editable?) {}
         })
-        messagesRv.setOnTouchListener { _, event -> if (event.action == MotionEvent.ACTION_DOWN) hideKeyboardPreservingText(); false }
+        messagesRv.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) hideKeyboardPreservingText()
+            false
+        }
+
+        userInputEt.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                userInputEt.postDelayed({
+                    val imm = getSystemService(InputMethodManager::class.java)
+                    imm.showSoftInput(
+                        userInputEt,
+                        InputMethodManager.SHOW_IMPLICIT
+                    )
+                }, 120)
+            }
+        }
+
         userActionFab = findViewById(R.id.fab)
         iniciarMotorIADeFormaSegura()
         userActionFab.setOnClickListener {
@@ -336,28 +355,6 @@ class MainActivity : AppCompatActivity() {
             } else false
         }
 
-        findViewById<View>(R.id.card_ai).setOnClickListener {
-            userInputEt.setText("¿Qué podés hacer?")
-            userInputEt.requestFocus()
-            userInputEt.setSelection(userInputEt.text.length)
-        }
-
-        findViewById<View>(R.id.card_catalog).setOnClickListener {
-            startActivity(Intent(this, CatalogActivity::class.java))
-        }
-
-        findViewById<View>(R.id.card_files).setOnClickListener {
-            startActivityForResult(
-                Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "*/*"
-                }, 1001
-            )
-        }
-
-        findViewById<View>(R.id.card_voice).setOnClickListener {
-            startVoiceInput()
-        }
     }
 
 

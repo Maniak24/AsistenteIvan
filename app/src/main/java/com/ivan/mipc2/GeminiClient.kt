@@ -9,6 +9,12 @@ import java.net.URL
 
 object GeminiClient {
 
+    private val models = listOf(
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.1-flash-lite"
+    )
+
     suspend fun ask(prompt: String): String = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY.trim()
 
@@ -16,11 +22,37 @@ object GeminiClient {
             throw Exception("La clave de Gemini no llegó a la APK.")
         }
 
+        var lastError = "Gemini no respondió."
+
+        for (model in models) {
+            try {
+                return@withContext request(model, prompt, apiKey)
+            } catch (e: Exception) {
+                lastError = e.message ?: lastError
+
+                if (!lastError.contains("HTTP 404")) {
+                    throw e
+                }
+            }
+        }
+
+        throw Exception(lastError)
+    }
+
+    private fun request(
+        model: String,
+        prompt: String,
+        apiKey: String
+    ): String {
+
         val connection = (URL(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
+            "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
         ).openConnection() as HttpURLConnection).apply {
+
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
+            setRequestProperty("x-goog-api-key", apiKey)
+
             connectTimeout = 15000
             readTimeout = 45000
             doOutput = true
@@ -31,13 +63,21 @@ object GeminiClient {
                 .put(
                     "contents",
                     JSONArray().put(
-                        JSONObject().put(
-                            "parts",
-                            JSONArray().put(
-                                JSONObject().put("text", prompt)
+                        JSONObject()
+                            .put("role", "user")
+                            .put(
+                                "parts",
+                                JSONArray().put(
+                                    JSONObject().put("text", prompt)
+                                )
                             )
-                        )
                     )
+                )
+                .put(
+                    "generationConfig",
+                    JSONObject()
+                        .put("temperature", 0.7)
+                        .put("maxOutputTokens", 2048)
                 )
                 .toString()
 
@@ -46,14 +86,16 @@ object GeminiClient {
             }
 
             val code = connection.responseCode
-            val stream = if (code in 200..299) {
-                connection.inputStream
-            } else {
-                connection.errorStream
-            }
 
-            val response = stream?.bufferedReader()?.use { it.readText() }
-                ?: throw Exception("Gemini no devolvió respuesta.")
+            val stream =
+                if (code in 200..299)
+                    connection.inputStream
+                else
+                    connection.errorStream
+
+            val response =
+                stream?.bufferedReader()?.use { it.readText() }
+                    ?: throw Exception("Gemini no devolvió respuesta.")
 
             if (code !in 200..299) {
                 throw Exception("Gemini HTTP $code")
@@ -61,27 +103,31 @@ object GeminiClient {
 
             val json = JSONObject(response)
 
-            val candidates = json.optJSONArray("candidates")
-                ?: throw Exception("Gemini no devolvió candidatos.")
+            val candidates =
+                json.optJSONArray("candidates")
+                    ?: throw Exception("Gemini no devolvió candidatos.")
 
             if (candidates.length() == 0) {
                 throw Exception("Gemini devolvió una respuesta vacía.")
             }
 
-            val parts = candidates.getJSONObject(0)
-                .optJSONObject("content")
-                ?.optJSONArray("parts")
-                ?: throw Exception("Respuesta de Gemini sin contenido.")
+            val parts =
+                candidates.getJSONObject(0)
+                    .optJSONObject("content")
+                    ?.optJSONArray("parts")
+                    ?: throw Exception("Respuesta de Gemini sin contenido.")
 
-            if (parts.length() == 0) {
-                throw Exception("Gemini devolvió contenido vacío.")
+            val result = buildString {
+                for (i in 0 until parts.length()) {
+                    append(parts.getJSONObject(i).optString("text"))
+                }
+            }.trim()
+
+            if (result.isBlank()) {
+                throw Exception("Gemini devolvió texto vacío.")
             }
 
-            parts.getJSONObject(0)
-                .optString("text")
-                .ifBlank {
-                    throw Exception("Gemini no devolvió texto.")
-                }
+            return result
 
         } finally {
             connection.disconnect()

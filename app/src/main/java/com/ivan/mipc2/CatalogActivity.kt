@@ -180,20 +180,79 @@ class CatalogActivity : AppCompatActivity() {
 
     private fun showImportOptions() {
         AlertDialog.Builder(this).setTitle("Carga masiva")
-            .setItems(arrayOf("Importar CSV", "Pegar una lista", "Ver formato")) { _, which ->
-                when (which) { 0 -> openCsv(); 1 -> showPasteDialog(); 2 -> showFormat() }
+            .setItems(arrayOf("Importar Excel (.xlsx)", "Importar CSV", "Pegar una lista", "Ver formato")) { _, which ->
+                when (which) {
+                0 -> openXlsx()
+                1 -> openCsv()
+                2 -> showPasteDialog()
+                3 -> showFormat()
+            }
             }.show()
+    }
+
+    private fun openXlsx() {
+        startActivityForResult(
+            Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            },
+            7002
+        )
     }
 
     private fun openCsv() {
         startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE); type = "text/*"; putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("text/csv", "text/comma-separated-values", "text/plain"))
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "text/*"
+            putExtra(
+                Intent.EXTRA_MIME_TYPES,
+                arrayOf(
+                    "text/csv",
+                    "text/comma-separated-values",
+                    "text/plain"
+                )
+            )
         }, 7001)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 7001 && resultCode == RESULT_OK) data?.data?.let { importCsv(it) }
+
+        if (requestCode == 7001 &&
+            resultCode == RESULT_OK
+        ) {
+            data?.data?.let { importCsv(it) }
+        }
+
+        if (requestCode == 7002 &&
+            resultCode == RESULT_OK
+        ) {
+            data?.data?.let { importXlsx(it) }
+        }
+    }
+
+    private fun importXlsx(uri: Uri) {
+        try {
+            val rows = XlsxCatalogImporter.read(
+                contentResolver,
+                uri
+            )
+
+            val added = importRows(rows)
+
+            afterImport(added)
+
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "No pude leer el Excel: ${e.message ?: "formato no válido"}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun importCsv(uri: Uri) {
@@ -224,19 +283,122 @@ class CatalogActivity : AppCompatActivity() {
     }
 
     private fun importRows(rows: List<List<String>>): Int {
+
+        if (rows.isEmpty()) return 0
+
+        var nameCol = 0
+        var categoryCol = 1
+        var brandCol = 2
+        var priceCol = 3
+        var stockCol = 4
+        var descriptionCol = 5
+        var promotionCol = 6
+
+        val first = rows.first().map {
+            it.trim().lowercase()
+        }
+
+        val hasHeader = first.any {
+            it.contains("producto") ||
+            it.contains("nombre") ||
+            it.contains("descripcion") ||
+            it.contains("descripción") ||
+            it.contains("precio") ||
+            it.contains("stock")
+        }
+
+        if (hasHeader) {
+
+            fun find(vararg names: String): Int {
+                return first.indexOfFirst { value ->
+                    names.any { name -> value.contains(name) }
+                }.takeIf { it >= 0 } ?: -1
+            }
+
+            find("producto", "nombre", "articulo", "artículo")
+                .takeIf { it >= 0 }
+                ?.let { nameCol = it }
+
+            find("categoria", "categoría", "rubro")
+                .takeIf { it >= 0 }
+                ?.let { categoryCol = it }
+
+            find("marca", "modelo")
+                .takeIf { it >= 0 }
+                ?.let { brandCol = it }
+
+            find("precio", "valor", "importe")
+                .takeIf { it >= 0 }
+                ?.let { priceCol = it }
+
+            find("stock", "cantidad", "existencia")
+                .takeIf { it >= 0 }
+                ?.let { stockCol = it }
+
+            find("descripcion", "descripción", "detalle")
+                .takeIf { it >= 0 }
+                ?.let { descriptionCol = it }
+
+            find("promocion", "promoción", "oferta")
+                .takeIf { it >= 0 }
+                ?.let { promotionCol = it }
+        }
+
+        val dataRows =
+            if (hasHeader) rows.drop(1) else rows
+
         var added = 0
-        rows.forEachIndexed { index, row ->
-            if (index == 0 && row.any { it.lowercase().contains("producto") || it.lowercase().contains("nombre") }) return@forEachIndexed
-            if (row.isEmpty() || row[0].isBlank()) return@forEachIndexed
-            products.add(CatalogProduct(System.currentTimeMillis() + index, row.getOrElse(0) { "" }, row.getOrElse(1) { "" }, row.getOrElse(2) { "" }, row.getOrElse(3) { "" }, row.getOrElse(4) { "0" }.toIntOrNull() ?: 0, row.getOrElse(5) { "" }, row.getOrElse(6) { "" }))
+
+        fun value(
+            row: List<String>,
+            index: Int
+        ): String {
+            return row.getOrNull(index)?.trim() ?: ""
+        }
+
+        dataRows.forEachIndexed { index, row ->
+
+            val name = value(row, nameCol)
+
+            if (name.isBlank()) return@forEachIndexed
+
+            val stockText = value(row, stockCol)
+
+            val stock =
+                stockText
+                    .replace(".", "")
+                    .replace(",", ".")
+                    .toDoubleOrNull()
+                    ?.toInt()
+                    ?: 0
+
+            products.add(
+                CatalogProduct(
+                    id = System.currentTimeMillis() + index,
+                    name = name,
+                    category = value(row, categoryCol),
+                    brand = value(row, brandCol),
+                    price = value(row, priceCol),
+                    stock = stock,
+                    description = value(row, descriptionCol),
+                    promotion = value(row, promotionCol)
+                )
+            )
+
             added++
         }
-        if (added > 0) saveProducts()
+
+        if (added > 0) {
+            saveProducts()
+        }
+
         return added
     }
 
     private fun showPasteDialog() {
-        val input = EditText(this).apply { hint = "Producto;Categoría;Marca;Precio;Stock;Descripción;Promoción"; setTextColor(-1); setHintTextColor(0xff777783.toInt()); minLines = 8; gravity = Gravity.TOP }
+        val input = EditText(this).apply { hint = "Producto;Categoría;Marca;Precio;Stock;Descripción;Promoción
+
+También podés importar directamente un archivo Excel .xlsx."; setTextColor(-1); setHintTextColor(0xff777783.toInt()); minLines = 8; gravity = Gravity.TOP }
         AlertDialog.Builder(this).setTitle("Pegar lista").setView(input).setNegativeButton("Cancelar", null).setPositiveButton("Importar") { _, _ ->
             val added = importRows(parseDelimited(input.text.toString())); afterImport(added)
         }.show()
