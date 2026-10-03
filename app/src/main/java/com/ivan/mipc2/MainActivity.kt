@@ -69,33 +69,68 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(userInputEt.windowToken, 0)
     }
 
+    private fun startConversationMode() {
+        try {
+            if (!::voiceManager.isInitialized) {
+                voiceManager = VoiceManager(this)
+            }
+        } catch (e: Exception) {
             Log.e(TAG, "No se pudo preparar la voz", e)
-            Toast.makeText(this, "No se pudo iniciar la voz de Mi PC.", Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                this,
+                "No se pudo iniciar la voz de Mi PC.",
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
+
+        conversationVoiceMode = true
         startConversationListening()
     }
 
+    private fun startConversationListening() {
         if (!conversationVoiceMode || isListening || conversationProcessing) return
+
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+
             speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) { isListening = true; VoiceConversationActivity.setState("listening") }
+
+                override fun onReadyForSpeech(params: Bundle?) {
+                    isListening = true
+                    VoiceConversationActivity.setState("listening")
+                }
+
                 override fun onResults(results: Bundle?) {
                     isListening = false
-                    val spokenText = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.trim()
+
+                    val spokenText =
+                        results?.getStringArrayList(
+                            SpeechRecognizer.RESULTS_RECOGNITION
+                        )?.firstOrNull()?.trim()
+
                     if (!spokenText.isNullOrEmpty() && conversationVoiceMode) {
                         conversationProcessing = true
                         VoiceConversationActivity.setState("processing")
+
                         userInputEt.setText(spokenText)
                         userInputEt.setSelection(userInputEt.text.length)
+
                         handleUserInput()
                     }
                 }
+
                 override fun onError(error: Int) {
                     isListening = false
-                    if (conversationVoiceMode) lifecycleScope.launch { kotlinx.coroutines.delay(500); startConversationListening() }
+
+                    if (conversationVoiceMode) {
+                        lifecycleScope.launch {
+                            kotlinx.coroutines.delay(500)
+                            startConversationListening()
+                        }
+                    }
                 }
+
                 override fun onBeginningOfSpeech() {}
                 override fun onRmsChanged(rmsdB: Float) {}
                 override fun onBufferReceived(buffer: ByteArray?) {}
@@ -104,12 +139,28 @@ class MainActivity : AppCompatActivity() {
                 override fun onEvent(eventType: Int, params: Bundle?) {}
             })
         }
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-AR")
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "es-AR")
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
+
+        val intent = Intent(
+            RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+        ).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                "es-AR"
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
+                "es-AR"
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_PARTIAL_RESULTS,
+                false
+            )
         }
+
         speechRecognizer?.startListening(intent)
     }
 
