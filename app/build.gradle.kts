@@ -20,10 +20,6 @@ val escapedGeminiApiKey = geminiApiKey
     .replace("\"", "\\\"")
 
 android {
-    buildFeatures {
-        buildConfig = true
-    }
-
     namespace = "com.ivan.mipc2"
     compileSdk = 36
 

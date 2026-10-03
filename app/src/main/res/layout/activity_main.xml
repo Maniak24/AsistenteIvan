@@ -144,7 +144,6 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingTop="8dp"
-                android:paddingBottom="92dp"
                 android:scrollbars="vertical" />
 
             <com.ivan.mipc2.IntroRobotView
@@ -189,9 +188,10 @@
                 android:layout_weight="1"
                 android:background="@android:color/transparent"
                 android:hint="Escribile a Mi PC..."
-                android:imeOptions="actionSend"
+                android:imeOptions="actionSend|flagNoExtractUi"
                 android:inputType="textCapSentences|textMultiLine"
                 android:maxLines="4"
+                android:gravity="center_vertical"
                 android:paddingStart="10dp"
                 android:paddingEnd="6dp"
                 android:textColor="#FFFFFF"

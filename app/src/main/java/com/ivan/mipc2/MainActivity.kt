@@ -14,6 +14,9 @@ import android.net.NetworkCapabilities
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.view.MotionEvent
 import android.media.ToneGenerator
@@ -227,6 +230,22 @@ class MainActivity : AppCompatActivity() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         setContentView(R.layout.activity_main)
 
+        val composer = findViewById<View>(R.id.composer)
+
+        ViewCompat.setOnApplyWindowInsetsListener(composer) { view, insets ->
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            val keyboardHeight = (ime.bottom - systemBars.bottom).coerceAtLeast(0)
+
+            view.translationY = -keyboardHeight.toFloat()
+
+            insets
+        }
+
+        ViewCompat.requestApplyInsets(composer)
+
+
         
         
         
@@ -348,7 +367,7 @@ class MainActivity : AppCompatActivity() {
         )
         messageAdapter.notifyItemInserted(0)
         messagesRv.post {
-            messagesRv.scrollToPosition(messages.lastIndex)
+            messagesRv.smoothScrollToPosition(messages.lastIndex)
         }
 
         userInputEt = findViewById(R.id.user_input)
@@ -414,7 +433,7 @@ class MainActivity : AppCompatActivity() {
             )
         )
         messageAdapter.notifyItemInserted(messages.lastIndex)
-        messagesRv.scrollToPosition(messages.lastIndex)
+        messagesRv.smoothScrollToPosition(messages.lastIndex)
 
         val assistantIndex = messages.size
         messages.add(
@@ -425,7 +444,7 @@ class MainActivity : AppCompatActivity() {
             )
         )
         messageAdapter.notifyItemInserted(messages.lastIndex)
-        messagesRv.scrollToPosition(messages.lastIndex)
+        messagesRv.smoothScrollToPosition(messages.lastIndex)
 
         lifecycleScope.launch {
             try {
@@ -458,7 +477,7 @@ class MainActivity : AppCompatActivity() {
                     isUser = false
                 )
                 messageAdapter.notifyItemChanged(assistantIndex)
-                messagesRv.scrollToPosition(assistantIndex)
+                messagesRv.smoothScrollToPosition(assistantIndex)
 
                 if (conversationVoiceMode) {
                     conversationProcessing = false
@@ -484,7 +503,7 @@ class MainActivity : AppCompatActivity() {
                     isUser = false
                 )
                 messageAdapter.notifyItemChanged(assistantIndex)
-                messagesRv.scrollToPosition(assistantIndex)
+                messagesRv.smoothScrollToPosition(assistantIndex)
 
                 if (conversationVoiceMode) {
                     conversationProcessing = false
@@ -555,7 +574,7 @@ class MainActivity : AppCompatActivity() {
                     )
 
                     messageAdapter.notifyItemInserted(messages.lastIndex)
-                    messagesRv.scrollToPosition(messages.lastIndex)
+                    messagesRv.smoothScrollToPosition(messages.lastIndex)
 
                 } catch (e: Exception) {
                     Log.e(TAG, "Error leyendo archivo", e)
@@ -570,7 +589,7 @@ class MainActivity : AppCompatActivity() {
                     )
 
                     messageAdapter.notifyItemInserted(messages.lastIndex)
-                    messagesRv.scrollToPosition(messages.lastIndex)
+                    messagesRv.smoothScrollToPosition(messages.lastIndex)
                 }
             }
         }
