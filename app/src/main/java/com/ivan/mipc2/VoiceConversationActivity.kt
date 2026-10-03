@@ -136,15 +136,12 @@ class VoiceConversationActivity : AppCompatActivity() {
     override fun onDestroy() {
         liveClient?.close()
         liveClient = null
-        super.onDestroy()
-    }
-
-    /* {
         animation?.cancel()
         animation = null
         if (instance === this) instance = null
         super.onDestroy()
     }
+
     private fun startLiveConversation() {
         val apiKey = BuildConfig.GEMINI_API_KEY
 
@@ -175,5 +172,4 @@ class VoiceConversationActivity : AppCompatActivity() {
 
         liveClient?.start()
     }
-
 }

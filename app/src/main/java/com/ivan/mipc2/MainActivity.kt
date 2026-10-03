@@ -69,23 +69,6 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(userInputEt.windowToken, 0)
     }
 
-    private fun startActivityForResult(
-                                    Intent(this, VoiceConversationActivity::class.java),
-                                    3001
-                                ) {
-        if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Toast.makeText(this, "El reconocimiento de voz no está disponible.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
-            return
-        }
-        conversationVoiceMode = true
-        try {
-            if (!::voiceManager.isInitialized) voiceManager = VoiceManager(applicationContext)
-        } catch (e: Throwable) {
-            conversationVoiceMode = false
             Log.e(TAG, "No se pudo preparar la voz", e)
             Toast.makeText(this, "No se pudo iniciar la voz de Mi PC.", Toast.LENGTH_LONG).show()
             return
@@ -93,7 +76,6 @@ class MainActivity : AppCompatActivity() {
         startConversationListening()
     }
 
-    private fun startConversationListening() {
         if (!conversationVoiceMode || isListening || conversationProcessing) return
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
@@ -154,11 +136,8 @@ class MainActivity : AppCompatActivity() {
                 override fun onResults(results: Bundle?) {
                     results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let {
                         userInputEt.setText(it)
-                            if (isModelReady && it.isNotBlank()) {
-                                handleUserInput()
-                            }
                         userInputEt.setSelection(userInputEt.text.length)
-                        if (isModelReady) handleUserInput()
+                        if (isModelReady && it.isNotBlank()) handleUserInput()
                     }
                     isListening = false
                 }

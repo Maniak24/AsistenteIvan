@@ -64,6 +64,18 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/voice_transcript"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="Esperando…"
+            android:textColor="#C9C9D4"
+            android:textSize="14sp"
+            android:maxLines="4"
+            android:ellipsize="end" />
+
+        <TextView
             android:id="@+id/voice_hint"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
