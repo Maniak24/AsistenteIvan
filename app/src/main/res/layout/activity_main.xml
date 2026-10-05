@@ -214,6 +214,8 @@
                 app:maxImageSize="21dp" />
         </LinearLayout>
 
+    </LinearLayout>
+
     <!-- MENU LATERAL -->
     <LinearLayout
         android:id="@+id/side_menu"
