@@ -154,10 +154,48 @@
                 android:alpha="0.75" />
         </FrameLayout>
 
-        <!-- BARRA DE ESCRITURA -->
 
-    </LinearLayout>
+    <!-- MENU LATERAL -->
+    <LinearLayout
+        android:id="@+id/side_menu"
+        android:layout_width="310dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@drawable/bg_side_menu_premium"
+        android:elevation="30dp"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:paddingTop="32dp"
+        android:visibility="gone">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:gravity="center_vertical">
+
+            <com.ivan.mipc2.MiPcLogoView
+                android:layout_width="42dp"
+                android:layout_height="42dp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="MI PC"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btn_close_menu"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_header_button"
+                android:contentDescription="Cerrar"
+                android:padding="12dp"
+                android:src="@drawable/ic_close" />
+    
 
 <LinearLayout
             android:id="@+id/composer"
@@ -217,47 +255,7 @@
                 app:elevation="5dp"
                 app:maxImageSize="21dp" />
         </LinearLayout>
-    <!-- MENU LATERAL -->
-    <LinearLayout
-        android:id="@+id/side_menu"
-        android:layout_width="310dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="end"
-        android:background="@drawable/bg_side_menu_premium"
-        android:elevation="30dp"
-        android:orientation="vertical"
-        android:padding="20dp"
-        android:paddingTop="32dp"
-        android:visibility="gone">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:gravity="center_vertical">
-
-            <com.ivan.mipc2.MiPcLogoView
-                android:layout_width="42dp"
-                android:layout_height="42dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:text="MI PC"
-                android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <ImageButton
-                android:id="@+id/btn_close_menu"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_header_button"
-                android:contentDescription="Cerrar"
-                android:padding="12dp"
-                android:src="@drawable/ic_close" />
-        </LinearLayout>
+    </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"

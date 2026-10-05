@@ -280,19 +280,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val composer = findViewById<View>(R.id.composer)
-
-        ViewCompat.setOnApplyWindowInsetsListener(composer) { view, insets ->
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            val keyboardHeight = (ime.bottom - systemBars.bottom).coerceAtLeast(0)
-
-            view.translationY = -keyboardHeight.toFloat()
-
-            insets
-        }
-
-        ViewCompat.requestApplyInsets(composer)
+        composer.isClickable = true
+        composer.bringToFront()
 
 
         
@@ -357,11 +346,9 @@ class MainActivity : AppCompatActivity() {
         catalogRepository = CatalogRepository(applicationContext)
 
         findViewById<View>(R.id.btn_mic).setOnClickListener {
-            android.widget.Toast.makeText(this, "MIC funcionando", android.widget.Toast.LENGTH_SHORT).show()
             startVoiceInput()
         }
         findViewById<View>(R.id.btn_call).setOnClickListener {
-            android.widget.Toast.makeText(this, "LLAMADA funcionando", android.widget.Toast.LENGTH_SHORT).show()
             if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
             } else {
@@ -426,6 +413,9 @@ class MainActivity : AppCompatActivity() {
         userInputEt = findViewById(R.id.user_input)
         val btnMic = findViewById<View>(R.id.btn_mic)
         val btnCall = findViewById<View>(R.id.btn_call)
+
+        btnMic.isClickable = true
+        btnCall.isClickable = true
         userInputEt.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { val writing = !s.isNullOrBlank(); btnMic.visibility = if (writing) View.GONE else View.VISIBLE; btnCall.visibility = if (writing) View.GONE else View.VISIBLE }
@@ -449,9 +439,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         userActionFab = findViewById(R.id.fab)
+        userActionFab.isClickable = true
+        userInputEt.isClickable = true
+        userInputEt.isFocusable = true
         iniciarMotorIADeFormaSegura()
         userActionFab.setOnClickListener {
-            android.widget.Toast.makeText(this, "ENVIAR funcionando", android.widget.Toast.LENGTH_SHORT).show()
             if (isModelReady) handleUserInput()
         }
 
