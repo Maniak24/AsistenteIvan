@@ -82,9 +82,20 @@ class CatalogRepository(context: Context) {
         val queryLooksLikeCatalogQuestion =
             listOf(
                 "precio",
+                "precios",
                 "cuanto",
+                "cuantos",
+                "cuantas",
                 "tenes",
+                "tenemos",
                 "tienen",
+                "hay",
+                "que hay",
+                "que tenemos",
+                "que tenes",
+                "mostrame",
+                "mostrar",
+                "catalogo",
                 "stock",
                 "queda",
                 "quedan",
@@ -105,9 +116,12 @@ class CatalogRepository(context: Context) {
                 "accesorio",
                 "accesorios",
                 "oferta",
+                "ofertas",
                 "promocion",
+                "promociones",
                 "venta",
                 "venden",
+                "vender",
                 "comprar"
             ).any { query.contains(it) }
 

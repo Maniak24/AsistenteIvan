@@ -41,6 +41,7 @@ class GeminiLiveClient(
             object : WebSocketListener() {
 
                 override fun onOpen(webSocket: WebSocket, response: Response) {
+                    android.util.Log.d("MIPC_LIVE", "WebSocket OPEN: ${response.code}")
                     onState("Conectando…")
 
                     val setup = JSONObject()
@@ -81,8 +82,8 @@ class GeminiLiveClient(
                                 .put("outputAudioTranscription", JSONObject())
                         )
 
+                    android.util.Log.d("MIPC_LIVE", "Enviando setup")
                     webSocket.send(setup.toString())
-                    startAudioRecorder()
                 }
 
                 override fun onMessage(webSocket: WebSocket, text: String) {
@@ -90,7 +91,9 @@ class GeminiLiveClient(
                         val root = JSONObject(text)
 
                         if (root.has("setupComplete")) {
+                            android.util.Log.d("MIPC_LIVE", "SETUP COMPLETE")
                             onState("Escuchando…")
+                            startAudioRecorder()
                         }
 
                         val server = root.optJSONObject("serverContent") ?: return
@@ -138,6 +141,11 @@ class GeminiLiveClient(
                     response: Response?
                 ) {
                     running.set(false)
+                    android.util.Log.e(
+                        "MIPC_LIVE",
+                        "WebSocket FAILURE: ${t.message} HTTP=${response?.code}",
+                        t
+                    )
                     onError(t.message ?: "Conexión Live perdida")
                 }
 

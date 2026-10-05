@@ -177,39 +177,88 @@ class MainActivity : AppCompatActivity() {
 
     private fun startVoiceInput() {
         if (!SpeechRecognizer.isRecognitionAvailable(this)) {
-            Toast.makeText(this, "El reconocimiento de voz no está disponible.", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(
+                this,
+                "El reconocimiento de voz no está disponible.",
+                Toast.LENGTH_SHORT
+            ).show()
+            return
         }
+
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001); return
+            requestPermissions(
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                2001
+            )
+            return
         }
+
         playMicStartSound()
-        if (speechRecognizer == null) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-            speechRecognizer?.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) { isListening = true }
-                override fun onResults(results: Bundle?) {
-                    results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let {
-                        userInputEt.setText(it)
-                        userInputEt.setSelection(userInputEt.text.length)
-                        if (isModelReady && it.isNotBlank()) handleUserInput()
-                    }
-                    isListening = false
+
+        speechRecognizer?.cancel()
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+
+        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+
+            override fun onReadyForSpeech(params: Bundle?) {
+                isListening = true
+            }
+
+            override fun onResults(results: Bundle?) {
+                isListening = false
+
+                val spokenText = results
+                    ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                    ?.firstOrNull()
+                    ?.trim()
+
+                if (!spokenText.isNullOrEmpty()) {
+                    userInputEt.setText(spokenText)
+                    userInputEt.setSelection(userInputEt.text.length)
+                    userInputEt.requestFocus()
                 }
-                override fun onError(error: Int) { isListening = false; Toast.makeText(this@MainActivity, "No pude reconocer la voz.", Toast.LENGTH_SHORT).show() }
-                override fun onBeginningOfSpeech() {}
-                override fun onRmsChanged(rmsdB: Float) {}
-                override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {}
-                override fun onPartialResults(partialResults: Bundle?) {}
-                override fun onEvent(eventType: Int, params: Bundle?) {}
-            })
+            }
+
+            override fun onError(error: Int) {
+                isListening = false
+
+                Toast.makeText(
+                    this@MainActivity,
+                    "No pude reconocer la voz.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onPartialResults(partialResults: Bundle?) {}
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
+
+        val intent = Intent(
+            RecognizerIntent.ACTION_RECOGNIZE_SPEECH
+        ).apply {
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE,
+                "es-AR"
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE,
+                "es-AR"
+            )
+            putExtra(
+                RecognizerIntent.EXTRA_PARTIAL_RESULTS,
+                false
+            )
         }
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-AR")
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "es-AR")
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false)
-        }
+
         speechRecognizer?.startListening(intent)
     }
 
