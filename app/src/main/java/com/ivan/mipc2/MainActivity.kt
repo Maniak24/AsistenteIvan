@@ -356,8 +356,12 @@ class MainActivity : AppCompatActivity() {
         }
         catalogRepository = CatalogRepository(applicationContext)
 
-        findViewById<View>(R.id.btn_mic).setOnClickListener { startVoiceInput() }
+        findViewById<View>(R.id.btn_mic).setOnClickListener {
+            android.widget.Toast.makeText(this, "MIC funcionando", android.widget.Toast.LENGTH_SHORT).show()
+            startVoiceInput()
+        }
         findViewById<View>(R.id.btn_call).setOnClickListener {
+            android.widget.Toast.makeText(this, "LLAMADA funcionando", android.widget.Toast.LENGTH_SHORT).show()
             if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 2001)
             } else {
@@ -447,6 +451,7 @@ class MainActivity : AppCompatActivity() {
         userActionFab = findViewById(R.id.fab)
         iniciarMotorIADeFormaSegura()
         userActionFab.setOnClickListener {
+            android.widget.Toast.makeText(this, "ENVIAR funcionando", android.widget.Toast.LENGTH_SHORT).show()
             if (isModelReady) handleUserInput()
         }
 
